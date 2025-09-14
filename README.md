@@ -34,7 +34,7 @@ Have you ever tried browsing a directory tree with tens of thousands of files an
 - Can easily be **browsed with any archive viewer**
 - Support fast, efficient **diffing** between two trees
 - Can be **listed** within the CLI in sorted or original order
-- Enable workflows like **recovery planning** (extract dummies first, restore files later)
+- Enables **recovery planning** (extract dummies first, replace files later)
 
 This turns what's normally a giant wall of text into a portable, organized snapshot.
 Directory trees are treated as artifacts that can be archived, compared, and extracted. 
@@ -137,8 +137,8 @@ make
 ### PERFORMANCE NOTES
 
 - Designed for efficiency with millions of files - streams I/O to avoid high memory usage and pressure.
-- Intelligently off-loads excess temporary data to disk-based locations in order to conserve system resources.
-- `--tmpdir` allows full control over where temporary data is off-loaded to (if needed by the external sorting mechanism).
+- Intelligently off-loads temporary data to disk-based locations in order to conserve system resources.
+- `--tmpdir` allows full control over where temporary data is off-loaded to.
 
 ### SECURITY, CONTRIBUTIONS, AND LICENSE
 

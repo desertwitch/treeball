@@ -12,7 +12,7 @@ import (
 )
 
 // Diff produces a tarball consisting of the differences between two given tarballs.
-func (prog *Program) Diff(ctx context.Context, cmpOld string, cmpNew string, output string) (*diff.Result, error) {
+func (prog *Program) Diff(ctx context.Context, cmpOld string, cmpNew string, output string) (*diff.Result, error) { //nolint:unparam
 	var hasDifferences bool
 
 	out, err := prog.fs.Create(output)
