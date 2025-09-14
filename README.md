@@ -1,7 +1,7 @@
 <div align="center">
     <img alt="Logo" src="assets/treeball.png" width="260">
     <h1>treeball</h1>
-    <p>Remembering is half the recovery.</p>
+    <p>Being able to remember is half the recovery.</p>
 </div>
 
 <div align="center">
