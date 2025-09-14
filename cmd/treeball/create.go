@@ -1,0 +1,78 @@
+package main
+
+import (
+	"archive/tar"
+	"context"
+	"fmt"
+	"io/fs"
+	"path/filepath"
+
+	pgzip "github.com/klauspost/pgzip"
+)
+
+// Create produces a tarball of a target directory structure, the files as empty dummies.
+func (prog *Program) Create(ctx context.Context, input string, output string, excludes []string) error {
+	var creationDone bool
+
+	out, err := prog.fs.Create(output)
+	if err != nil {
+		return fmt.Errorf("failed to create output file: %w", err)
+	}
+
+	defer func() {
+		if !creationDone {
+			_ = prog.fs.Remove(output)
+		}
+	}()
+	defer out.Close()
+
+	gw, err := pgzip.NewWriterLevel(out, pgzip.BestCompression)
+	if err != nil {
+		return fmt.Errorf("failed to initialize gzip writer: %w", err)
+	}
+	defer gw.Close()
+
+	tw := tar.NewWriter(gw)
+	defer tw.Close()
+
+	if err := prog.fsWalker.WalkDir(input, func(path string, d fs.DirEntry, err error) error {
+		if err := ctx.Err(); err != nil {
+			return ctx.Err()
+		}
+
+		if err != nil {
+			return fmt.Errorf("failed to walk filesystem: %w", err)
+		}
+
+		if path == input {
+			return nil
+		}
+
+		if isExcluded(path, excludes) {
+			if d.IsDir() {
+				return filepath.SkipDir
+			}
+
+			return nil
+		}
+
+		relPath, err := filepath.Rel(input, path)
+		if err != nil {
+			return fmt.Errorf("failed to obtain relative path: %w", err)
+		}
+
+		if err := writeDummyFile(tw, relPath, d.IsDir()); err != nil {
+			return fmt.Errorf("failed to write dummy file: %w", err)
+		}
+
+		fmt.Fprintln(prog.stdout, path)
+
+		return nil
+	}); err != nil {
+		return fmt.Errorf("failure during create: %w", err)
+	}
+
+	creationDone = true
+
+	return nil
+}
