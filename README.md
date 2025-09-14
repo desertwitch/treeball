@@ -45,9 +45,9 @@ Directory trees are treated as artifacts that can be archived, compared, and ext
 - **Diff** two tree tarballs to detect added/removed paths
 - **List** the contents of a tree tarball (sorted or original order)
 - Works efficiently even with **millions of files** (tested up to 5M+)
-- Streams data and uses external sorting to keep a low resource profile
-- Clear, scriptable output via `stdout` / `stderr` (no useless chatter)
-- Fully tested (including exclusion logic, cancel handling, edge cases)
+- Streams data and uses external sorting to keep a **low resource profile**
+- Clear, **scriptable output** via `stdout` / `stderr` (no useless chatter)
+- Fully **tested** (including exclusion logic, cancel handling, edge cases)
 
 ### COMMANDS
 
