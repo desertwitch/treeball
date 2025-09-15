@@ -37,7 +37,7 @@ Have you ever tried browsing a large directory with `tree` or `find`, only to dr
 - Enable **recovery planning** (extract dummies first, replace files later)
 
 This turns what's normally a giant wall of text into a portable, organized snapshot.
-It treats directory trees as artifacts - something you can archive, compare, and extract.
+Directory trees are reshaped as artifacts - something you can archive, compare, and extract.
 
 ### FEATURES
 
@@ -93,7 +93,7 @@ treeball diff base.tar.gz updated.tar.gz /dev/null
 treeball diff old.tar.gz new.tar.gz diff.tar.gz --tmpdir=/mnt/largedisk
 ```
 
-The diff archive contains dummy entries under `+++` and `---` folders to reflect additions and removals.
+The diff archive contains synthetic `+++` and `---` folders to reflect additions and removals.
 
 #### `treeball list`
 
@@ -142,6 +142,29 @@ make
 - Designed for efficiency with millions of files - streams I/O to avoid high memory usage and pressure.
 - Intelligently off-loads temporary data to disk-based locations in order to conserve system resources.
 - `--tmpdir` allows full control over where temporary data is off-loaded to (e.g., to high-speed storage).
+
+#### Benchmarks:
+
+| Files     | CREATE (Time / RAM / CPU)  | DIFF (Time / RAM / CPU)  | LIST (Time / RAM / CPU)  | Treeball Size |
+|-----------|----------------------------|--------------------------|--------------------------|---------------|
+| 5K        | 0.06 s / 12.8 MB / 133%    | 0.06 s / 17.4 MB / 167%  | 0.05 s / 10.4 MB / 100%  | 25 KB         |
+| 10K       | 0.12 s / 14.2 MB / 150%    | 0.09 s / 18.7 MB / 200%  | 0.08 s / 11.5 MB / 113%  | 49 KB         |
+| 50K       | 0.47 s / 30.5 MB / 181%    | 0.27 s / 27.6 MB / 215%  | 0.29 s / 15.9 MB / 135%  | 242 KB        |
+| 100K      | 1.00 s / 35.7 MB / 169%    | 0.55 s / 50.4 MB / 215%  | 0.59 s / 28.4 MB / 137%  | 483 KB        |
+| 500K      | 5.22 s / 38.6 MB / 163%    | 2.58 s / 83.5 MB / 226%  | 2.70 s / 41.9 MB / 145%  | 2.4 MB        |
+| 1M        | 10.84 s / 36.2 MB / 161%   | 5.59 s / 82.8 MB / 215%  | 5.65 s / 41.1 MB / 143%  | 4.8 MB        |
+| 5M        | 55.44 s / 39.7 MB / 157%   | 25.76 s / 82.9 MB / 230% | 26.90 s / 41.1 MB / 146% | 24 MB         |
+
+#### Benchmark Environment:
+
+- **CPU**: Intel® Core™ i3-9100 @ 3.60GHz
+- **Cores available to VM**: 3
+- **Memory**: 2 GB RAM
+- **Filesystem**: XFS
+- **Disk**: Samsung SSD 980 NVMe
+- **OS**: Ubuntu 24.04.2 LTS (noble) 
+- **Average path length**: ~85 characters
+- **Maximum directory depth**: 5 levels
 
 ### SECURITY, CONTRIBUTIONS, AND LICENSE
 
