@@ -2,5 +2,6 @@
 /vendor
 /coverage.tmp
 /coverage.txt
+/TODO
 # Added by goreleaser init:
 dist/

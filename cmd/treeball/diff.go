@@ -2,12 +2,12 @@ package main
 
 import (
 	"archive/tar"
+	"compress/gzip"
 	"context"
 	"fmt"
 	"path/filepath"
 	"strings"
 
-	pgzip "github.com/klauspost/pgzip"
 	"github.com/lanrat/extsort/diff"
 )
 
@@ -27,7 +27,7 @@ func (prog *Program) Diff(ctx context.Context, cmpOld string, cmpNew string, out
 	}()
 	defer out.Close()
 
-	gw, err := pgzip.NewWriterLevel(out, pgzip.BestCompression)
+	gw, err := gzip.NewWriterLevel(out, gzip.BestCompression)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize gzip writer: %w", err)
 	}

@@ -3,13 +3,13 @@ package main
 import (
 	"archive/tar"
 	"bytes"
+	"compress/gzip"
 	"context"
 	"io"
 	"os"
 	"strings"
 	"testing"
 
-	pgzip "github.com/klauspost/pgzip"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )
@@ -18,7 +18,7 @@ import (
 func createTar(entries []string) []byte {
 	var buf bytes.Buffer
 
-	gz := pgzip.NewWriter(&buf)
+	gz := gzip.NewWriter(&buf)
 	tw := tar.NewWriter(gz)
 
 	for _, name := range entries {
@@ -45,7 +45,7 @@ func Test_Program_Diff_DiffsFound_Success(t *testing.T) {
 	f, err := fs.Open("/diff.tar.gz")
 	require.NoError(t, err)
 
-	gzr, err := pgzip.NewReader(f)
+	gzr, err := gzip.NewReader(f)
 	require.NoError(t, err)
 
 	tr := tar.NewReader(gzr)

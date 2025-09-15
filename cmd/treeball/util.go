@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/tar"
+	"compress/gzip"
 	"context"
 	"errors"
 	"fmt"
@@ -11,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	pgzip "github.com/klauspost/pgzip"
 	"github.com/lanrat/extsort"
 	"github.com/spf13/afero"
 )
@@ -126,7 +126,7 @@ func (prog *Program) tarPathStream(ctx context.Context, path string, sort bool) 
 		}
 		defer f.Close()
 
-		gz, err := pgzip.NewReader(f)
+		gz, err := gzip.NewReader(f)
 		if err != nil {
 			errs <- fmt.Errorf("failed to initialize gzip reader: %w", err)
 
