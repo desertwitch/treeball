@@ -141,7 +141,7 @@ make
 
 - Designed for efficiency with millions of files - streams I/O to avoid high memory usage and pressure.
 - Intelligently off-loads temporary data to disk-based locations in order to conserve system resources.
-- `--tmpdir` allows full control over where temporary data is off-loaded to (e.g., high speed storage).
+- `--tmpdir` allows full control over where temporary data is off-loaded to (e.g., to high-speed storage).
 
 ### SECURITY, CONTRIBUTIONS, AND LICENSE
 
