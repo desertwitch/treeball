@@ -18,9 +18,9 @@ All commands print their primary results (such as file paths or differences) to 
 
 Exit Codes:
 
-	0  Success
-	1  Differences found (only for 'diff')
-	2  General failure (invalid input, I/O errors, etc.)
+	0 - Success
+	1 - Differences found (only for 'diff')
+	2 - General failure (invalid input, I/O errors, etc.)
 */
 package main
 

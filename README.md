@@ -34,7 +34,7 @@ Have you ever tried browsing a directory tree with tens of thousands of files an
 - Can easily be **browsed with any archive viewer**
 - Support fast, efficient **diffing** between two trees
 - Can be **listed** within the CLI in sorted or original order
-- Enables **recovery planning** (extract dummies first, replace files later)
+- Enable **recovery planning** (extract dummies first, replace files later)
 
 This turns what's normally a giant wall of text into a portable, organized snapshot.
 Directory trees are treated as artifacts that can be archived, compared, and extracted. 
@@ -114,9 +114,9 @@ treeball list archive.tar.gz --tmpdir=/mnt/largedisk
 ```
 
 ### RETURN CODES
-  - `0` – Success
-  - `1` – Differences found (only for `diff`)
-  - `2` – General failure (invalid input, I/O error, etc.)
+  - `0` - Success
+  - `1` - Differences found (only for `diff`)
+  - `2` - General failure (invalid input, I/O errors, etc.)
 
 ### INSTALLATION
 
