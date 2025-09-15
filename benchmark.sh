@@ -20,7 +20,7 @@ drop_caches() {
 }
 
 check_treeball() {
-    if ! "$TREEBALL_BIN" --version &>/dev/null; then
+    if ! "$TREEBALL_BIN" --version >> "$RESULTS"; then
         echo "Error: treeball binary not working at $TREEBALL_BIN" >&2
         exit 1
     fi
