@@ -93,7 +93,7 @@ treeball diff base.tar.gz updated.tar.gz /dev/null
 treeball diff old.tar.gz new.tar.gz diff.tar.gz --tmpdir=/mnt/largedisk
 ```
 
-The diff archive contains synthetic `+++` and `---` folders to reflect additions and removals.
+The diff archive contains synthetic `+++` and `---` folders to reflect both additions and removals.
 
 #### `treeball list`
 
