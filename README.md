@@ -25,7 +25,7 @@ An important step in recovering from catastrophic data loss is knowing what you 
 
 ### RATIONALE
 
-Have you ever tried browsing a directory tree with tens of thousands of files and directories using `tree` or `find`, and ended up just drowning in all that text? Wouldn't it be nice to just be able to browse such massive lists as you normally would your filesystem?
+Have you ever tried browsing a large directory with `tree` or `find`, only to drown in endless text? Wouldn't it be nice to explore those massive lists as if they were your filesystem - but all packed into a single file?
 
 `treeball` solves this by converting directory trees into `.tar.gz` archives that:
 
@@ -37,17 +37,20 @@ Have you ever tried browsing a directory tree with tens of thousands of files an
 - Enable **recovery planning** (extract dummies first, replace files later)
 
 This turns what's normally a giant wall of text into a portable, organized snapshot.
-Directory trees are treated as artifacts that can be archived, compared, and extracted. 
+It treats directory trees as artifacts - something you can archive, compare, and extract.
 
 ### FEATURES
 
+#### Core commands:
 - **Create** a tree tarball from any directory tree
 - **Diff** two tree tarballs to detect added/removed paths
 - **List** the contents of a tree tarball (sorted or original order)
+
+#### Operational strengths:
 - Works efficiently even with **millions of files** (tested up to 5M+)
 - Streams data and uses external sorting to keep a **low resource profile**
 - Clear, **scriptable output** via `stdout` / `stderr` (no useless chatter)
-- Fully **tested** (including exclusion logic, cancel handling, edge cases)
+- Fully **tested** (including exclusion logic, signal handling, edge cases)
 
 ### COMMANDS
 
@@ -138,7 +141,7 @@ make
 
 - Designed for efficiency with millions of files - streams I/O to avoid high memory usage and pressure.
 - Intelligently off-loads temporary data to disk-based locations in order to conserve system resources.
-- `--tmpdir` allows full control over where temporary data is off-loaded to.
+- `--tmpdir` allows full control over where temporary data is off-loaded to (e.g., high speed storage).
 
 ### SECURITY, CONTRIBUTIONS, AND LICENSE
 
