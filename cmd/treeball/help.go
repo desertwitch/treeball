@@ -36,6 +36,8 @@ The command will recursively include all files and directories under <root-folde
 excluding paths specified using the --exclude flags (which can be used multiple times).
 Archived paths will be presented as zero byte dummy files, preserving their exact names.
 
+Beware excludes must be written in the same absolute/relative form as the <root-folder>.
+
 All paths written to the tarball will be printed to standard output (stdout), any errors
 or other relevant operational output will be printed to standard error (stderr) respectively.
 The command will return with an exit code 0 in case of success; an exit code 2 for any errors.`

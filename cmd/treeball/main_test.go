@@ -93,7 +93,7 @@ func Test_CLI_ListCommand_ArgCount_Error(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
 	cmd := newRootCmd(t.Context(), fs, nil, nil)
-	cmd.SetArgs([]string{"list", "/only-one"})
+	cmd.SetArgs([]string{"list"})
 
 	require.Error(t, cmd.Execute())
 }

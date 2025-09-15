@@ -94,6 +94,42 @@ func Test_IsExcluded_Table(t *testing.T) {
 			excludes: []string{"/tmp/cache"},
 			expected: true,
 		},
+		{
+			name:     "Absolute path with absolute exclude (match)",
+			path:     "/src/a/file.txt",
+			excludes: []string{"/src/a"},
+			expected: true,
+		},
+		{
+			name:     "Absolute path with relative exclude (no match)",
+			path:     "/src/a/file.txt",
+			excludes: []string{"src/a"},
+			expected: false,
+		},
+		{
+			name:     "Relative path with relative exclude (match)",
+			path:     "src/a/file.txt",
+			excludes: []string{"src/a"},
+			expected: true,
+		},
+		{
+			name:     "Relative path with absolute exclude (no match)",
+			path:     "src/a/file.txt",
+			excludes: []string{"/src/a"},
+			expected: false,
+		},
+		{
+			name:     "Different absolute root (no match)",
+			path:     "/home/user/docs/file.txt",
+			excludes: []string{"/other/docs"},
+			expected: false,
+		},
+		{
+			name:     "Exclude parent directory should not match sibling",
+			path:     "/src/other/file.txt",
+			excludes: []string{"/src/a"},
+			expected: false,
+		},
 	}
 
 	for _, tt := range tests {

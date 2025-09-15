@@ -2,12 +2,12 @@ package main
 
 import (
 	"archive/tar"
-	"compress/gzip"
 	"context"
 	"io"
 	"os"
 	"testing"
 
+	pgzip "github.com/klauspost/pgzip"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )
@@ -25,7 +25,7 @@ func Test_Program_Create_Success(t *testing.T) {
 	f, err := fs.Open("/out.tar.gz")
 	require.NoError(t, err)
 
-	gzr, err := gzip.NewReader(f)
+	gzr, err := pgzip.NewReader(f)
 	require.NoError(t, err)
 
 	tr := tar.NewReader(gzr)
@@ -58,7 +58,7 @@ func Test_Program_Create_WithExcludes_Success(t *testing.T) {
 	f, err := fs.Open("/out.tar.gz")
 	require.NoError(t, err)
 
-	gzr, err := gzip.NewReader(f)
+	gzr, err := pgzip.NewReader(f)
 	require.NoError(t, err)
 
 	tr := tar.NewReader(gzr)
@@ -91,7 +91,7 @@ func Test_Program_Create_WithFileExcludes_Success(t *testing.T) {
 	f, err := fs.Open("/out.tar.gz")
 	require.NoError(t, err)
 
-	gzr, err := gzip.NewReader(f)
+	gzr, err := pgzip.NewReader(f)
 	require.NoError(t, err)
 
 	tr := tar.NewReader(gzr)
