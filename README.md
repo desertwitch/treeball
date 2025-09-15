@@ -48,7 +48,7 @@ It treats directory trees as artifacts - something you can archive, compare, and
 
 #### Operational strengths:
 - Works efficiently even with **millions of files** (tested up to 5M+)
-- Streams data and uses external sorting to keep a **low resource profile**
+- Streams data and uses external sorting for a **low resource profile**
 - Clear, **scriptable output** via `stdout` / `stderr` (no useless chatter)
 - Fully **tested** (including exclusion logic, signal handling, edge cases)
 
