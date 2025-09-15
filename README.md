@@ -62,6 +62,8 @@ Build a `.tar.gz` archive from a directory tree.
 treeball create <root-folder> <output.tar.gz> [--exclude=PATH --exclude=PATH...]
 ```
 
+Beware excludes must be written in the same absolute/relative form as the `<root-folder>`.
+
 **Examples:**
 
 ```bash
