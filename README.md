@@ -113,7 +113,7 @@ treeball list archive.tar.gz --sort=false
 treeball list archive.tar.gz --tmpdir=/mnt/largedisk
 ```
 
-### RETURN CODES
+### EXIT CODES
   - `0` - Success
   - `1` - Differences found (only for `diff`)
   - `2` - General failure (invalid input, I/O errors, etc.)

@@ -21,9 +21,9 @@ All commands print their primary results (such as file paths or differences) to 
 (stdout). Any encountered errors and operational messages are printed to standard error (stderr).
 
 Exit Codes:
-  0  Success
-  1  Differences found (only for 'diff')
-  2  General failure (invalid input, I/O errors, etc.)
+  0 - Success
+  1 - Differences found (only for 'diff')
+  2 - General failure (invalid input, I/O errors, etc.)
 
 For detailed help on a specific command, run:
   treeball help <command>`
