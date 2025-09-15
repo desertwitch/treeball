@@ -155,6 +155,9 @@ make
 | 1M        | 10.84 s / 36.2 MB / 161%   | 5.59 s / 82.8 MB / 215%  | 5.65 s / 41.1 MB / 143%  | 4.8 MB        |
 | 5M        | 55.44 s / 39.7 MB / 157%   | 25.76 s / 82.9 MB / 230% | 26.90 s / 41.1 MB / 146% | 24 MB         |
 
+> CPU usage above 100% indicates that the program is **multi-threaded** and effectively parallelized.  
+> For example, 200% CPU usage on a system with 3 cores means the process is using **two full cores concurrently**.  
+
 #### Benchmark Environment:
 
 - **CPU**: Intel® Core™ i3-9100 @ 3.60GHz
