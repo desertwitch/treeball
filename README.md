@@ -100,6 +100,11 @@ treeball diff old.tar.gz new.tar.gz diff.tar.gz --tmpdir=/mnt/largedisk
 
 Beware the diff archive contains synthetic `+++` and `---` directories to reflect both additions and removals.
 
+> **Performance considerations with large archives (500K+ paths):**  
+> The external sorting mechanism will off-load excess data to on-disk locations (controllable with `--tmpdir`) to conserve RAM.  
+> Ensure that a suitable location is provided (in terms of speed and available space) as such data can peak at multiple gigabytes.  
+> If none is provided the intelligent mechanism will try to find one, falling back to the system's default temporary file location.  
+
 #### `treeball list`
 
 List the contents of a `.tar.gz` tree archive (sorted or unsorted).
@@ -120,6 +125,11 @@ treeball list archive.tar.gz --sort=false
 # Use of an on-disk temporary directory (for massive archives):
 treeball list archive.tar.gz --tmpdir=/mnt/largedisk
 ```
+
+> **Performance considerations with large archives (500K+ paths):**  
+> The external sorting mechanism will off-load excess data to on-disk locations (controllable with `--tmpdir`) to conserve RAM.  
+> Ensure that a suitable location is provided (in terms of speed and available space) as such data can peak at multiple gigabytes.  
+> If none is provided the intelligent mechanism will try to find one, falling back to the system's default temporary file location.  
 
 ### ADVANCED OPTIONS
 
@@ -164,15 +174,9 @@ make
 ./treeball --help
 ```
 
-### PERFORMANCE NOTES
+### BENCHMARKS
 
-- Designed for efficiency with millions of files - streams I/O to avoid high memory usage and pressure.
-- Intelligently off-loads temporary data to disk-based locations in order to conserve system resources.
-- `--tmpdir` allows full control over where temporary data is off-loaded to (e.g., to high-speed storage).
-
-#### Benchmarks:
-
-**Environment A - Medium-Performance VM:**
+#### Environment A - Medium-Performance VM:
 > Intel i3-9100 3.60GHz (VM: 3 cores), 2GB RAM, Samsung SSD 980 NVMe, Ubuntu 24.04.2  
 > Average path length: ~85 characters / Maximum directory depth: 5 levels / Defaults  
 
@@ -188,7 +192,7 @@ make
 
 > CPU usage above 100% indicates that the program is **multi-threaded** and effectively parallelized.  
 
-**Environment B - High-Performance VM:**
+#### Environment B - High-Performance VM:
 > Intel i5-12600K 3.69 GHz (VM: 16 cores), 32GB RAM, Samsung SSD 980 Pro NVMe, Ubuntu 24.04.2  
 > Average path length: ~85 characters / Maximum directory depth: 5 levels / Defaults  
 
