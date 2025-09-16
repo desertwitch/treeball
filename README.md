@@ -98,7 +98,7 @@ treeball diff base.tar.gz updated.tar.gz /dev/null
 treeball diff old.tar.gz new.tar.gz diff.tar.gz --tmpdir=/mnt/largedisk
 ```
 
-Beware the diff archive contains synthetic `+++` and `---` folders to reflect both additions and removals.
+Beware the diff archive contains synthetic `+++` and `---` directories to reflect both additions and removals.
 
 #### `treeball list`
 
@@ -127,20 +127,20 @@ These flags are optional and intended for **advanced users** working with large-
 
 #### `treeball create`
 
-| Flag           | Description                                         | Default    |
-|----------------|-----------------------------------------------------|------------|
-| `--blocksize`  | Compression block size                              | 1048576    |
-| `--blockcount` | Number of compression blocks processed in parallel  | GOMAXPROCS |
+| Flag           | Description                                         | Default      |
+|----------------|-----------------------------------------------------|--------------|
+| `--blocksize`  | Compression block size                              | 1048576      |
+| `--blockcount` | Number of compression blocks processed in parallel  | `GOMAXPROCS` |
 
 #### `treeball diff` / `treeball list`
 
 | Flag          | Description                                                    | Default              |
 |---------------|----------------------------------------------------------------|----------------------|
 | `--tmpdir`    | Directory for external on-disk sorting                         | Auto                 |
-| `--workers`   | Number of parallel worker threads used during sorting/diffing  | GOMAXPROCS or max. 4 |
+| `--workers`   | Number of parallel worker threads used during sorting/diffing  | `min(4, GOMAXPROCS)` |
 | `--chunksize` | Maximum records in memory per worker before spilling to disk   | 100000               |
 
-> You should use `--tmpdir` to point to high-speed local storage (e.g., NVMe scratch disk) for large workloads.
+You should use `--tmpdir` to point to high-speed local storage (e.g., NVMe scratch disk) for large workloads.
 
 ### EXIT CODES
   - `0` - Success
