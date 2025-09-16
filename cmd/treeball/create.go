@@ -31,13 +31,13 @@ func (prog *Program) Create(ctx context.Context, input string, output string, ex
 	}()
 	defer out.Close()
 
-	gw, err := pgzip.NewWriterLevel(out, pgzip.BestCompression)
+	gw, err := pgzip.NewWriterLevel(out, prog.gzipConfig.CompressionLevel)
 	if err != nil {
 		return fmt.Errorf("failed to initialize gzip writer: %w", err)
 	}
 	defer gw.Close()
 
-	if err := gw.SetConcurrency(prog.pgzipConfig.BlockSize, prog.pgzipConfig.BlockCount); err != nil {
+	if err := gw.SetConcurrency(prog.gzipConfig.BlockSize, prog.gzipConfig.BlockCount); err != nil {
 		return fmt.Errorf("failed to set gzip writer settings: %w", err)
 	}
 

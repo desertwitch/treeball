@@ -115,3 +115,21 @@ func Test_Program_Diff_CreateFile_Error(t *testing.T) {
 	_, statErr := fs.Stat("/diff.tar.gz")
 	require.ErrorIs(t, statErr, os.ErrNotExist)
 }
+
+// Expectation: An invalid configuration should raise the appropriate error and the output file be removed.
+func Test_Program_Diff_InvalidConfig_Error(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	require.NoError(t, afero.WriteFile(fs, "/old.tar.gz", createTar([]string{"a.txt"}), 0o644))
+	require.NoError(t, afero.WriteFile(fs, "/new.tar.gz", createTar([]string{"a.txt", "b.txt"}), 0o644))
+
+	cfg := gzipConfigDefault
+	cfg.CompressionLevel = -17
+
+	prog := NewProgram(fs, io.Discard, io.Discard, &cfg, nil)
+	_, err := prog.Diff(t.Context(), "/old.tar.gz", "/new.tar.gz", "/diff.tar.gz")
+	require.Error(t, err)
+
+	_, err = fs.Stat("/diff.tar.gz")
+	require.ErrorIs(t, err, os.ErrNotExist)
+}

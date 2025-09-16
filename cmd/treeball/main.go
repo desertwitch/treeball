@@ -25,6 +25,7 @@ Exit Codes:
 package main
 
 import (
+	"compress/gzip"
 	"context"
 	"errors"
 	"fmt"
@@ -57,9 +58,10 @@ var (
 	Version string
 
 	//nolint:mnd
-	pgzipConfigDefault = PgzipConfig{
-		BlockSize:  1 << 20,               // Approximate size of blocks
-		BlockCount: runtime.GOMAXPROCS(0), // Amount of blocks processing in parallel
+	gzipConfigDefault = GzipConfig{
+		BlockSize:        1 << 20,               // Approximate size of blocks (pgzip operations)
+		BlockCount:       runtime.GOMAXPROCS(0), // Amount of blocks processing in parallel (pgzip operations)
+		CompressionLevel: gzip.BestCompression,  // Target level for compression (0: none to 9: highest)
 	}
 
 	//nolint:mnd
@@ -83,12 +85,12 @@ type Program struct {
 	stdout io.Writer
 	stderr io.Writer
 
-	pgzipConfig   *PgzipConfig
+	gzipConfig    *GzipConfig
 	extSortConfig *extsort.Config
 }
 
 // NewProgram returns a pointer to a new [Program].
-func NewProgram(fs afero.Fs, stdout io.Writer, stderr io.Writer, pgzipConfig *PgzipConfig, extsortConfig *extsort.Config) *Program {
+func NewProgram(fs afero.Fs, stdout io.Writer, stderr io.Writer, gzipConfig *GzipConfig, extsortConfig *extsort.Config) *Program {
 	var walker Walker
 
 	if fs == nil {
@@ -103,9 +105,9 @@ func NewProgram(fs afero.Fs, stdout io.Writer, stderr io.Writer, pgzipConfig *Pg
 		stderr = os.Stderr
 	}
 
-	if pgzipConfig == nil {
-		cfg := pgzipConfigDefault
-		pgzipConfig = &cfg
+	if gzipConfig == nil {
+		cfg := gzipConfigDefault
+		gzipConfig = &cfg
 	}
 
 	if extsortConfig == nil {
@@ -124,7 +126,7 @@ func NewProgram(fs afero.Fs, stdout io.Writer, stderr io.Writer, pgzipConfig *Pg
 		fsWalker:      walker,
 		stdout:        stdout,
 		stderr:        stderr,
-		pgzipConfig:   pgzipConfig,
+		gzipConfig:    gzipConfig,
 		extSortConfig: extsortConfig,
 	}
 }
@@ -144,7 +146,7 @@ func newRootCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Wr
 	rootCmd.SetOut(stdout)
 	rootCmd.SetErr(stderr)
 
-	createCompressorConfig := pgzipConfigDefault
+	createCompressorConfig := gzipConfigDefault
 	createCmd := &cobra.Command{
 		Use:     "create <root-folder> <output.tar.gz>",
 		Short:   createHelpShort,
@@ -158,10 +160,12 @@ func newRootCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Wr
 		},
 	}
 	createCmd.Flags().StringArrayVar(&createExcludes, "exclude", nil, "path to exclude; can be repeated multiple times")
-	createCmd.Flags().IntVar(&createCompressorConfig.BlockSize, "blocksize", pgzipConfigDefault.BlockSize, "block size for compressing")
-	createCmd.Flags().IntVar(&createCompressorConfig.BlockCount, "blockcount", pgzipConfigDefault.BlockCount, "blocks to compress in parallel")
+	createCmd.Flags().IntVar(&createCompressorConfig.CompressionLevel, "compression", gzipConfigDefault.CompressionLevel, "level of compression (0: none - 9: highest)")
+	createCmd.Flags().IntVar(&createCompressorConfig.BlockSize, "blocksize", gzipConfigDefault.BlockSize, "block size for compressing")
+	createCmd.Flags().IntVar(&createCompressorConfig.BlockCount, "blockcount", gzipConfigDefault.BlockCount, "blocks to compress in parallel")
 
 	diffSorterConfig := extSortConfigDefault
+	diffCompressorConfig := gzipConfigDefault
 	diffCmd := &cobra.Command{
 		Use:     "diff <old.tar.gz> <new.tar.gz> <diff.tar.gz>",
 		Short:   diffHelpShort,
@@ -169,13 +173,14 @@ func newRootCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Wr
 		Example: diffExample,
 		Args:    cobra.ExactArgs(3), //nolint:mnd
 		RunE: func(_ *cobra.Command, args []string) error {
-			prog := NewProgram(fs, stdout, stderr, nil, &diffSorterConfig)
+			prog := NewProgram(fs, stdout, stderr, &diffCompressorConfig, &diffSorterConfig)
 			_, err := prog.Diff(ctx, args[0], args[1], args[2])
 
 			return err
 		},
 	}
 	diffCmd.Flags().StringVar(&diffSorterConfig.TempFilesDir, "tmpdir", extSortConfigDefault.TempFilesDir, "on-disk location for intermediate files")
+	diffCmd.Flags().IntVar(&diffCompressorConfig.CompressionLevel, "compression", gzipConfigDefault.CompressionLevel, "level of compression (0: none - 9: highest)")
 	diffCmd.Flags().IntVar(&diffSorterConfig.NumWorkers, "workers", extSortConfigDefault.NumWorkers, "workers for concurrent operations")
 	diffCmd.Flags().IntVar(&diffSorterConfig.ChunkSize, "chunksize", extSortConfigDefault.ChunkSize, "max records per worker before spilling to disk")
 

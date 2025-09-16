@@ -16,10 +16,11 @@ import (
 	"github.com/spf13/afero"
 )
 
-// PgzipConfig is the configuration for concurrent gzip operations.
-type PgzipConfig struct {
-	BlockSize  int // Approximate size of blocks
-	BlockCount int // Amount of blocks processing in parallel
+// GzipConfig is the configuration for concurrent gzip operations.
+type GzipConfig struct {
+	BlockSize        int // Approximate size of blocks (pgzip operations)
+	BlockCount       int // Amount of blocks processing in parallel (pgzip operations)
+	CompressionLevel int // Target level for compression (0: none to 9: highest)
 }
 
 // Walker is an interface describing a filesystem walking function.

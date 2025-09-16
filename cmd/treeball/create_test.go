@@ -153,17 +153,49 @@ func Test_Program_Create_CtxCancel_Error(t *testing.T) {
 	require.ErrorIs(t, err, os.ErrNotExist)
 }
 
-// Expectation: An invalid compressor configuration should raise an error at runtime.
+// Expectation: An invalid configuration should raise the appropriate error and the output file be removed.
 func Test_Program_Create_InvalidConfig_Error(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
 	require.NoError(t, afero.WriteFile(fs, "/src/a.txt", []byte("a"), 0o644))
 	require.NoError(t, afero.WriteFile(fs, "/src/b/c.txt", []byte("c"), 0o644))
 
-	cfg := PgzipConfig{
-		BlockSize:  -1,
-		BlockCount: -1,
-	}
+	cfg := gzipConfigDefault
+	cfg.BlockCount = -1
+
+	prog := NewProgram(fs, io.Discard, io.Discard, &cfg, nil)
+	require.Error(t, prog.Create(t.Context(), "/src", "/out.tar.gz", []string{}))
+
+	_, err := fs.Stat("/out.tar.gz")
+	require.ErrorIs(t, err, os.ErrNotExist)
+}
+
+// Expectation: An invalid configuration should raise the appropriate error and the output file be removed.
+func Test_Program_Create_InvalidConfig2_Error(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	require.NoError(t, afero.WriteFile(fs, "/src/a.txt", []byte("a"), 0o644))
+	require.NoError(t, afero.WriteFile(fs, "/src/b/c.txt", []byte("c"), 0o644))
+
+	cfg := gzipConfigDefault
+	cfg.BlockSize = -1
+
+	prog := NewProgram(fs, io.Discard, io.Discard, &cfg, nil)
+	require.Error(t, prog.Create(t.Context(), "/src", "/out.tar.gz", []string{}))
+
+	_, err := fs.Stat("/out.tar.gz")
+	require.ErrorIs(t, err, os.ErrNotExist)
+}
+
+// Expectation: An invalid configuration should raise the appropriate error and the output file be removed.
+func Test_Program_Create_InvalidConfig3_Error(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	require.NoError(t, afero.WriteFile(fs, "/src/a.txt", []byte("a"), 0o644))
+	require.NoError(t, afero.WriteFile(fs, "/src/b/c.txt", []byte("c"), 0o644))
+
+	cfg := gzipConfigDefault
+	cfg.CompressionLevel = -17
 
 	prog := NewProgram(fs, io.Discard, io.Discard, &cfg, nil)
 	require.Error(t, prog.Create(t.Context(), "/src", "/out.tar.gz", []string{}))

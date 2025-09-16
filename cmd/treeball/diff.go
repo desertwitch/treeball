@@ -37,7 +37,7 @@ func (prog *Program) Diff(ctx context.Context, cmpOld string, cmpNew string, out
 	}()
 	defer out.Close()
 
-	gw, err := gzip.NewWriterLevel(out, gzip.BestCompression)
+	gw, err := gzip.NewWriterLevel(out, prog.gzipConfig.CompressionLevel)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize gzip writer: %w", err)
 	}
