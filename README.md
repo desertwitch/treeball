@@ -21,7 +21,8 @@
 
 **treeball creates, diffs, and lists directory trees as archives.**
 
-An important step in recovering from catastrophic data loss is knowing what you had in the first place.  
+An important step in recovering from catastrophic data loss is knowing what you had in the first place.
+
 `treeball` is a command-line utility for preserving directory trees as compressed archives, **replacing all files with zero-byte placeholders**. This creates lightweight, navigable tarballs that are portable, inspectable, and diffable - without scrolling through endless `tree`-style textual lists ever again.
 
 ### RATIONALE
