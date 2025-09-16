@@ -3,6 +3,8 @@ package main
 import (
 	"archive/tar"
 	"bytes"
+	"compress/gzip"
+	"context"
 	"errors"
 	"io"
 	"testing"
@@ -10,6 +12,14 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )
+
+// A helper writer for tests to simulate writing errors.
+type errorWriter struct{}
+
+// A helper function for tests to simulate writing failure.
+func (errorWriter) Write(p []byte) (int, error) {
+	return 0, errors.New("simulated write failure")
+}
 
 // Expectation: The function should handle the exclusions according to the table's expectations.
 func Test_isExcluded_Table(t *testing.T) {
@@ -143,6 +153,15 @@ func Test_writeDummyFile_Success(t *testing.T) {
 	require.Equal(t, []string{"foo.txt", "bar/"}, names)
 }
 
+// Expectation: The function should return the correct error on header write failure.
+func Test_writeDummyFile_WriteHeader_Error(t *testing.T) {
+	tw := tar.NewWriter(errorWriter{})
+	err := writeDummyFile(tw, "fail.txt", false)
+
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "header")
+}
+
 // Expecation: The channels should contain the correct ordered paths and no errors.
 func Test_tarPathStream_Sorted_Success(t *testing.T) {
 	fs := afero.NewMemMapFs()
@@ -211,6 +230,58 @@ func Test_tarPathStream_Open_Error(t *testing.T) {
 	}
 }
 
+// Expecation: The channels should contain the correct error and no paths.
+func Test_tarPathStream_GzipDecode_Error(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	require.NoError(t, afero.WriteFile(fs, "/archive.tar.gz", []byte("not a gzip file"), 0o644))
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	paths, errs := prog.tarPathStream(t.Context(), "/archive.tar.gz", false)
+
+	for range paths {
+		t.Fatal("should not emit any paths")
+	}
+
+	select {
+	case err := <-errs:
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "gzip")
+	default:
+		t.Fatal("expected gzip error from tarPathStream")
+	}
+}
+
+// Expecation: The channels should contain the correct error and no paths.
+func Test_tarPathStream_TarDecode_Error(t *testing.T) {
+	var buf bytes.Buffer
+	gz := gzip.NewWriter(&buf)
+
+	_, err := gz.Write([]byte("not a valid tarball"))
+	require.NoError(t, err)
+
+	err = gz.Close()
+	require.NoError(t, err)
+
+	fs := afero.NewMemMapFs()
+	require.NoError(t, afero.WriteFile(fs, "/archive.tar.gz", buf.Bytes(), 0o644))
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	paths, errs := prog.tarPathStream(t.Context(), "/archive.tar.gz", false)
+
+	for range paths {
+		t.Fatal("should not emit any paths")
+	}
+
+	select {
+	case err := <-errs:
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "tar")
+	default:
+		t.Fatal("expected tar error from tarPathStream")
+	}
+}
+
 // Expectation: The channels should contain the correct ordered paths and no errors.
 func Test_extsortStrings_Success(t *testing.T) {
 	in := make(chan string, 3)
@@ -237,7 +308,7 @@ func Test_extsortStrings_Success(t *testing.T) {
 }
 
 // Expectation: The channels should contain the correct error and no paths.
-func Test_extsortStrings_extErrs_Error(t *testing.T) {
+func Test_extsortStrings_External_Error(t *testing.T) {
 	in := make(chan string)
 	close(in)
 
@@ -257,5 +328,28 @@ func Test_extsortStrings_extErrs_Error(t *testing.T) {
 		require.Contains(t, err.Error(), "simulated external error")
 	default:
 		t.Fatal("expected error from extsortStrings")
+	}
+}
+
+// Expectation: A context cancellation should be respected and the sorting interrupted.
+func Test_extsortStrings_CtxCancel_Error(t *testing.T) {
+	ctx, cancel := context.WithCancel(t.Context())
+
+	in := make(chan string, 1)
+	in <- "a"
+	close(in)
+
+	extErrs := make(chan error)
+	close(extErrs)
+
+	cancel()
+	out, errs := extsortStrings(ctx, in, extErrs, &extSortConfigDefault)
+
+	for range out {
+		t.Fatal("should not emit output")
+	}
+
+	for err := range errs {
+		require.ErrorIs(t, err, context.Canceled)
 	}
 }
