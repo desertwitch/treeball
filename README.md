@@ -133,7 +133,7 @@ treeball list archive.tar.gz --tmpdir=/mnt/largedisk
 
 ### ADVANCED OPTIONS
 
-These flags are optional and intended for advanced users working with large-scale directories (multiple millions of files) or otherwise tuning `treeball` for specific hardware setups. Most users can safely ignore these unless dealing with performance constraints or custom environments.
+These optional options allow for more granular control when dealing with large workloads or complex environments.
 
 #### `treeball create`
 
