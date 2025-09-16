@@ -152,12 +152,13 @@ These optional options allow for more granular control with advanced workloads o
 
 | Flag          | Description                                                    | Default                      |
 |---------------|----------------------------------------------------------------|------------------------------|
-| `--tmpdir`    | On-disk directory for external sorting                         | `""` (auto) $^{1}$           |
-| `--workers`   | Number of parallel worker threads used for sorting/diffing     | `GOMAXPROCS` (max. 4) $^{2}$ |
+| `--tmpdir`    | On-disk directory for external sorting                         | `""` (auto) $^{1}$ $^{2}$    |
+| `--workers`   | Number of parallel worker threads used for sorting/diffing     | `GOMAXPROCS` (max. 4) $^{3}$ |
 | `--chunksize` | Maximum in-memory records per worker (before spilling to disk) | 100000                       |
 
 > $^{1}$ You should use `--tmpdir` to point to high-speed storage (e.g., NVMe scratch disk) for best performance.  
-> $^{2}$ When `GOMAXPROCS` is smaller than 4, that will be chosen as _default_ - otherwise `--workers` will _default_ to 4.  
+> $^{2}$ You should ensure that `--tmpdir` has sufficient free space, up to several gigabytes for advanced workloads.  
+> $^{3}$ When `GOMAXPROCS` is smaller than 4, that will be chosen as _default_ - otherwise `--workers` will _default_ to 4.  
 
 ### EXIT CODES
   - `0` - Success
