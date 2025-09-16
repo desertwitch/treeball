@@ -174,7 +174,7 @@ make
 
 **Environment A - Medium-Performance VM:**
 > Intel i3-9100 3.60GHz (VM: 3 cores), 2GB RAM, Samsung SSD 980 NVMe, Ubuntu 24.04.2  
-> Average path length: ~85 characters / Maximum directory depth: 5 levels / Default settings  
+> Average path length: ~85 characters / Maximum directory depth: 5 levels / Defaults  
 
 | Files | CREATE (Time / RAM / CPU) | DIFF (Time / RAM / CPU)   | LIST (Time / RAM / CPU)   | Treeball Size |
 |-------|---------------------------|---------------------------|---------------------------|---------------|
@@ -190,7 +190,7 @@ make
 
 **Environment B - High-Performance VM:**
 > Intel i5-12600K 3.69 GHz (VM: 16 cores), 32GB RAM, Samsung SSD 980 Pro NVMe, Ubuntu 24.04.2  
-> Average path length: ~85 characters / Maximum directory depth: 5 levels / Default settings  
+> Average path length: ~85 characters / Maximum directory depth: 5 levels / Defaults  
 
 | Files | CREATE (Time / RAM / CPU) | DIFF (Time / RAM / CPU)   | LIST (Time / RAM / CPU)  | Treeball Size |
 |-------|---------------------------|---------------------------|--------------------------|---------------|
