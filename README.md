@@ -50,7 +50,7 @@ Directory trees are reshaped as artifacts - something you can archive, compare, 
 - **List** the contents of a tree tarball (sorted or original order)
 
 #### Operational strengths:
-- Works efficiently even with **millions of files** (tested up to 5M+)
+- Works efficiently even with **millions of files** (tested up to **50M+**)
 - Streams data and uses external sorting for a **low resource profile**
 - Clear, **scriptable output** via `stdout` / `stderr` (no useless chatter)
 - Fully **tested** (including exclusion logic, signal handling, edge cases)
@@ -183,33 +183,39 @@ make
 
 ### BENCHMARKS
 
-#### Environment A - Medium-Performance VM:
-Intel i3-9100 3.60GHz (VM: 3 cores), 2GB RAM, Samsung SSD 980 NVMe, Ubuntu 24.04.2  
-Average path length: ~85 characters / Maximum directory depth: 5 levels / Defaults  
+#### Environment A - Low-Performance VM:
+Intel i7-10710U 1.10GHz (VM: 2 cores), 2GB RAM, Samsung 970 EVO Plus NVMe (EXT4), Ubuntu 24.04.3  
+Average path length: ~80 characters / Maximum directory depth: 5 levels / Defaults  
 
-| Files | CREATE (Time / RAM / CPU) | DIFF (Time / RAM / CPU)   | LIST (Time / RAM / CPU)   | Treeball Size |
-|-------|---------------------------|---------------------------|---------------------------|---------------|
-| 5K    | 0.06 s / 11.50 MB / 133%  | 0.05 s / 16.63 MB / 180%  | 0.05 s / 10.25 MB / 100%  | 25 KB         |
-| 10K   | 0.10 s / 15.38 MB / 160%  | 0.08 s / 17.75 MB / 188%  | 0.08 s / 11.25 MB / 125%  | 49 KB         |
-| 50K   | 0.42 s / 28.38 MB / 198%  | 0.27 s / 26.50 MB / 215%  | 0.29 s / 15.75 MB / 135%  | 242 KB        |
-| 100K  | 1.00 s / 31.37 MB / 170%  | 0.57 s / 53.13 MB / 207%  | 0.59 s / 28.63 MB / 137%  | 483 KB        |
-| 500K  | 5.37 s / 34.96 MB / 161%  | 2.60 s / 85.00 MB / 224%  | 2.74 s / 41.48 MB / 144%  | 2.4 MB        |
-| 1M    | 11.04 s / 36.07 MB / 158% | 5.27 s / 79.25 MB / 222%  | 5.60 s / 40.88 MB / 143%  | 4.8 MB        |
-| 5M    | 54.45 s / 37.39 MB / 160% | 25.40 s / 81.12 MB / 229% | 27.08 s / 41.25 MB / 145% | 24 MB         |
+| Files | CREATE (Time / RAM / CPU) | DIFF (Time / RAM / CPU)    | LIST (Time / RAM / CPU)   | Treeball Size |
+|-------|---------------------------|----------------------------|---------------------------|---------------|
+| 5K    | 0.05 s / 10.6 MB / 120%   | 0.05 s / 16.6 MB / 140%    | 0.04 s / 9.9 MB / 100%    | 25 KB         |
+| 10K   | 0.09 s / 14.5 MB / 167%   | 0.08 s / 18.5 MB / 175%    | 0.07 s / 11.3 MB / 100%   | 49 KB         |
+| 50K   | 0.34 s / 28.4 MB / 188%   | 0.21 s / 26.2 MB / 186%    | 0.24 s / 15.9 MB / 113%   | 242 KB        |
+| 100K  | 0.67 s / 34.9 MB / 194%   | 0.47 s / 57.8 MB / 177%    | 0.56 s / 29.8 MB / 123%   | 483 KB        |
+| 500K  | 3.42 s / 40.7 MB / 189%   | 2.09 s / 85.1 MB / 190%    | 2.31 s / 40.3 MB / 125%   | 2.4 MB        |
+| 1M    | 7.48 s / 41.3 MB / 190%   | 4.58 s / 80.4 MB / 193%    | 4.66 s / 39.6 MB / 127%   | 4.8 MB        |
+| 5M    | 39.23 s / 42.4 MB / 185%  | 22.19 s / 75.8 MB / 195%   | 22.99 s / 39.6 MB / 128%  | 24 MB         |
+| 10M   | 77.21 s / 42.8 MB / 185%  | 45.39 s / 78.8 MB / 194%   | 45.45 s / 39.4 MB / 128%  | 48 MB         |
+| 25M   | 194.08 s / 43.0 MB / 184% | 113.89 s / 80.4 MB / 193%  | 115.03 s / 40.6 MB / 128% | 119 MB        |
+| 50M   | 388.17 s / 42.9 MB / 184% | 227.51 s / 136.7 MB / 193% | 231.13 s / 71.3 MB / 128% | 237 MB        |
 
 #### Environment B - High-Performance VM:
-Intel i5-12600K 3.69 GHz (VM: 16 cores), 32GB RAM, Samsung SSD 980 Pro NVMe, Ubuntu 24.04.2  
-Average path length: ~85 characters / Maximum directory depth: 5 levels / Defaults  
+Intel i5-12600K 3.69 GHz (VM: 16 cores), 32GB RAM, Samsung 980 Pro NVMe (EXT4), Ubuntu 24.04.2  
+Average path length: ~80 characters / Maximum directory depth: 5 levels / Defaults  
 
-| Files | CREATE (Time / RAM / CPU) | DIFF (Time / RAM / CPU)   | LIST (Time / RAM / CPU)  | Treeball Size |
-|-------|---------------------------|---------------------------|--------------------------|---------------|
-| 5K    | 0.03 s / 21.45 MB / 133%  | 0.02 s / 13.36 MB / 200%  | 0.02 s / 10.99 MB / 100% | 25 KB         |
-| 10K   | 0.05 s / 24.09 MB / 180%  | 0.03 s / 21.47 MB / 200%  | 0.03 s / 13.09 MB / 100% | 49 KB         |
-| 50K   | 0.25 s / 36.99 MB / 172%  | 0.11 s / 25.87 MB / 209%  | 0.10 s / 17.32 MB / 130% | 242 KB        |
-| 100K  | 0.47 s / 37.82 MB / 177%  | 0.23 s / 51.90 MB / 213%  | 0.21 s / 31.37 MB / 123% | 483 KB        |
-| 500K  | 2.71 s / 38.79 MB / 156%  | 1.09 s / 82.40 MB / 255%  | 0.99 s / 45.21 MB / 139% | 2.4 MB        |
-| 1M    | 5.91 s / 38.57 MB / 144%  | 2.06 s / 81.76 MB / 255%  | 2.04 s / 44.82 MB / 144% | 4.8 MB        |
-| 5M    | 30.48 s / 42.98 MB / 140% | 10.04 s / 82.45 MB / 257% | 9.71 s / 44.50 MB / 148% | 24 MB         |
+| Files | CREATE (Time / RAM / CPU)  | DIFF (Time / RAM / CPU)    | LIST (Time / RAM / CPU)   | Treeball Size |
+|-------|----------------------------|----------------------------|---------------------------|---------------|
+| 5K    | 0.03 s / 21.38 MB / 100%   | 0.02 s / 17.23 MB / 150%   | 0.02 s / 10.93 MB / 100%  | 25 KB         |
+| 10K   | 0.04 s / 26.63 MB / 200%   | 0.04 s / 14.73 MB / 175%   | 0.03 s / 13.02 MB / 100%  | 49 KB         |
+| 50K   | 0.12 s / 43.55 MB / 342%   | 0.11 s / 24.84 MB / 200%   | 0.10 s / 19.25 MB / 120%  | 242 KB        |
+| 100K  | 0.22 s / 52.78 MB / 373%   | 0.24 s / 52.11 MB / 217%   | 0.21 s / 32.43 MB / 133%  | 483 KB        |
+| 500K  | 0.95 s / 55.22 MB / 425%   | 1.05 s / 81.90 MB / 255%   | 0.95 s / 43.38 MB / 148%  | 2.4 MB        |
+| 1M    | 1.94 s / 57.23 MB / 422%   | 1.97 s / 81.84 MB / 253%   | 1.87 s / 43.13 MB / 151%  | 4.8 MB        |
+| 5M    | 12.99 s / 62.99 MB / 317%  | 9.97 s / 82.31 MB / 252%   | 9.32 s / 47.24 MB / 151%  | 24 MB         |
+| 10M   | 29.78 s / 58.88 MB / 277%  | 19.37 s / 84.13 MB / 260%  | 18.80 s / 45.23 MB / 150% | 48 MB         |
+| 25M   | 87.34 s / 58.86 MB / 240%  | 47.95 s / 92.37 MB / 268%  | 46.10 s / 44.89 MB / 152% | 119 MB        |
+| 50M   | 172.75 s / 61.81 MB / 241% | 99.35 s / 142.35 MB / 265% | 92.54 s / 74.84 MB / 152% | 237 MB        |
 
 > CPU usage above 100% indicates that the program is **multi-threaded** and effectively parallelized.  
 
