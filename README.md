@@ -25,7 +25,8 @@ An important step in recovering from catastrophic data loss is knowing what you 
 
 ### RATIONALE
 
-Have you ever tried browsing a large directory with `tree` or `find`, only to drown in endless text? Wouldn't it be nice to explore those massive lists as if they were your filesystem - but all packed into a single file?
+Have you ever tried browsing a large directory with `tree` or `find`, only to drown in endless lists?  
+Wouldn't it be nice to explore them as if they were your filesystem - but all packed into a single file?  
 
 `treeball` solves this by converting directory trees into `.tar.gz` archives that:
 
