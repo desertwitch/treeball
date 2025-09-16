@@ -6,6 +6,7 @@ import (
 	"io"
 	"testing"
 
+	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )
 
@@ -35,7 +36,7 @@ func Test_WriteDummyFile_Success(t *testing.T) {
 		names = append(names, hdr.Name)
 	}
 
-	require.ElementsMatch(t, []string{"foo.txt", "bar/"}, names)
+	require.Equal(t, []string{"foo.txt", "bar/"}, names)
 }
 
 // Expectation: The function should handle the exclusions according to the table's expectations.
@@ -138,5 +139,73 @@ func Test_IsExcluded_Table(t *testing.T) {
 			result := isExcluded(tt.path, tt.excludes)
 			require.Equal(t, tt.expected, result)
 		})
+	}
+}
+
+// Expecation: The channels should contain the correct paths and no errors.
+func Test_tarPathStream_Sorted_Success(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	tarData := createTar([]string{"z.txt", "b/", "b/c.txt"})
+	require.NoError(t, afero.WriteFile(fs, "/archive.tar.gz", tarData, 0o644))
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	paths, errs := prog.tarPathStream(t.Context(), "/archive.tar.gz", true)
+
+	got := []string{}
+	for p := range paths {
+		got = append(got, p)
+	}
+
+	for err := range errs {
+		require.NoError(t, err)
+	}
+
+	require.Equal(t, []string{"b/", "b/c.txt", "z.txt"}, got)
+}
+
+// Expecation: The channels should contain the correct paths and no errors.
+func Test_tarPathStream_Unsorted_Success(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	tarData := createTar([]string{"z.txt", "b/", "b/c.txt"})
+	require.NoError(t, afero.WriteFile(fs, "/archive.tar.gz", tarData, 0o644))
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	paths, errs := prog.tarPathStream(t.Context(), "/archive.tar.gz", false)
+
+	got := []string{}
+	for p := range paths {
+		got = append(got, p)
+	}
+
+	for err := range errs {
+		require.NoError(t, err)
+	}
+
+	require.Equal(t, []string{"z.txt", "b/", "b/c.txt"}, got)
+}
+
+// Expecation: The channels should contain the correct error and no paths.
+func Test_tarPathStream_Open_Error(t *testing.T) {
+	baseFs := afero.NewMemMapFs()
+
+	require.NoError(t, afero.WriteFile(baseFs, "/archive.tar.gz", []byte("test"), 0o644))
+
+	fs := errorFs{Fs: baseFs}
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	paths, errs := prog.tarPathStream(t.Context(), "/archive.tar.gz", false)
+
+	for range paths {
+		t.Fatal("should not emit paths")
+	}
+
+	select {
+	case err := <-errs:
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "simulated open failure")
+	default:
+		t.Fatal("expected error from tarPathStream")
 	}
 }
