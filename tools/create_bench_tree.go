@@ -17,7 +17,7 @@ import (
 
 const filesPerDir = 100
 
-var workers = runtime.NumCPU() * 2
+var workers = runtime.GOMAXPROCS(0) * 2
 
 func buildPath(base string, d int) string {
 	level1 := fmt.Sprintf("dept_%02d", d/1000)

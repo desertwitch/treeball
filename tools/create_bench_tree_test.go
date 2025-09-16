@@ -74,7 +74,7 @@ func Test_Tool_createDummyTree_MkDirAll_Error(t *testing.T) {
 		failMkdirAll: true,
 	}
 
-	err := createDummyTree(fs, "/fail", 1000)
+	err := createDummyTree(fs, "/fail", 100000)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "mkdirall")
 }
@@ -86,7 +86,7 @@ func Test_Tool_createDummyTree_CreateFile_Error(t *testing.T) {
 		failCreate: true,
 	}
 
-	err := createDummyTree(fs, "/fail", 1000)
+	err := createDummyTree(fs, "/fail", 100000)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "creating file")
 }
