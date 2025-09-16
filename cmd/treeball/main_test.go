@@ -78,6 +78,32 @@ func Test_CLI_CreateCommand_ArgCount_Error(t *testing.T) {
 	require.Error(t, cmd.Execute())
 }
 
+// Expectation: The 'create' subcommand should error with an invalid configuration.
+func Test_CLI_CreateCommand_InvalidConfig_Error(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	_ = fs.MkdirAll("/some/input", 0o755)
+	_ = afero.WriteFile(fs, "/some/input/file.txt", []byte("test"), 0o644)
+
+	cmd := newRootCmd(t.Context(), fs, nil, nil)
+	cmd.SetArgs([]string{"create", "/some/input", "/some/output.tar.gz", "--blocksize=-1"})
+
+	require.Error(t, cmd.Execute())
+}
+
+// Expectation: The 'create' subcommand should error with an invalid configuration.
+func Test_CLI_CreateCommand_InvalidConfig2_Error(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	_ = fs.MkdirAll("/some/input", 0o755)
+	_ = afero.WriteFile(fs, "/some/input/file.txt", []byte("test"), 0o644)
+
+	cmd := newRootCmd(t.Context(), fs, nil, nil)
+	cmd.SetArgs([]string{"create", "/some/input", "/some/output.tar.gz", "--blockcount=-1"})
+
+	require.Error(t, cmd.Execute())
+}
+
 // Expectation: The 'diff' subcommand should error when missing arguments.
 func Test_CLI_DiffCommand_ArgCount_Error(t *testing.T) {
 	fs := afero.NewMemMapFs()
