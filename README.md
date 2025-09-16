@@ -133,7 +133,7 @@ treeball list archive.tar.gz --tmpdir=/mnt/largedisk
 
 ### ADVANCED OPTIONS
 
-These optional options allow for more granular control when dealing with large workloads or complex environments.
+These optional options allow for more granular control with large workloads or complex environments.
 
 #### `treeball create`
 
