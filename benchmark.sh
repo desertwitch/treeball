@@ -45,25 +45,7 @@ extract_and_log_metrics() {
 }
 
 create_dummy_tree() {
-    local dir=$1
-    local count=$2
-    local files_per_dir=100
-
-    local dirs_needed=$((count / files_per_dir + 1))
-
-    for ((d=0; d<dirs_needed; d++)); do
-        local level1="dept_$(printf "%02d" $((d / 1000)))"
-        local level2="proj_$(printf "%03d" $((d / 100)))"
-        local level3="batch_$(printf "%04d" $((d / 10)))"
-        local level4="group_$(printf "%06d" $d)"
-
-        local subdir="$dir/$level1/$level2/$level3/$level4"
-        mkdir -p "$subdir"
-
-        for ((f=0; f<files_per_dir && d*files_per_dir+f<count; f++)); do
-            touch "$subdir/data_$(printf "%06d" $f).txt"
-        done
-    done
+    go run ./tools/create_bench_tree.go "$1" "$2"
 }
 
 run_benchmarks() {
