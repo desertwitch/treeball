@@ -102,7 +102,7 @@ Beware the `diff` archive contains synthetic `+++` and `---` directories to refl
 
 > **Performance considerations with massive archives:**
 > The external sorting mechanism may off-load excess data to on-disk locations (controllable with `--tmpdir`) to conserve RAM.
-> Ensure that a suitable location is provided (in terms of speed and available space), as such data can peak at multiple gigabytes.
+> Ensure that a suitable location is provided (in terms of speed and available space), as such data _can_ peak at multiple gigabytes.
 > If none is provided, the intelligent mechanism will choose one for you, falling back to the system's default temporary file location.
 
 #### `treeball list`
@@ -128,7 +128,7 @@ treeball list archive.tar.gz --tmpdir=/mnt/largedisk
 
 > **Performance considerations with massive archives:**
 > The external sorting mechanism may off-load excess data to on-disk locations (controllable with `--tmpdir`) to conserve RAM.
-> Ensure that a suitable location is provided (in terms of speed and available space), as such data can peak at multiple gigabytes.
+> Ensure that a suitable location is provided (in terms of speed and available space), as such data _can_ peak at multiple gigabytes.
 > If none is provided, the intelligent mechanism will choose one for you, falling back to the system's default temporary file location.
 
 ### ADVANCED OPTIONS
