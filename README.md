@@ -184,8 +184,8 @@ make
 ### BENCHMARKS
 
 #### Environment A - Low-Performance VM:
-Intel i7-10710U 1.10GHz (VM: 2 cores), 2GB RAM, Samsung 970 EVO Plus NVMe (EXT4), Ubuntu 24.04.3  
-Average path length: ~80 characters / Maximum directory depth: 5 levels / Defaults  
+i7-10710U 1.10GHz (VM: 2 cores), 2GB RAM, 970 EVO Plus NVMe (EXT4), Ubuntu 24.04.3  
+Average path length: ~80 characters / Maximum directory depth: 5 levels / with `--tmpdir`  
 
 | Files | CREATE (Time / RAM / CPU) | DIFF (Time / RAM / CPU)    | LIST (Time / RAM / CPU)   | Treeball Size |
 |-------|---------------------------|----------------------------|---------------------------|---------------|
@@ -201,8 +201,8 @@ Average path length: ~80 characters / Maximum directory depth: 5 levels / Defaul
 | 50M   | 388.17 s / 42.9 MB / 184% | 227.51 s / 136.7 MB / 193% | 231.13 s / 71.3 MB / 128% | 237 MB        |
 
 #### Environment B - High-Performance VM:
-Intel i5-12600K 3.69 GHz (VM: 16 cores), 32GB RAM, Samsung 980 Pro NVMe (EXT4), Ubuntu 24.04.2  
-Average path length: ~80 characters / Maximum directory depth: 5 levels / Defaults  
+i5-12600K 3.69 GHz (VM: 16 cores), 32GB RAM, 980 Pro NVMe (EXT4), Ubuntu 24.04.2  
+Average path length: ~80 characters / Maximum directory depth: 5 levels / with `--tmpdir`  
 
 | Files | CREATE (Time / RAM / CPU)  | DIFF (Time / RAM / CPU)    | LIST (Time / RAM / CPU)   | Treeball Size |
 |-------|----------------------------|----------------------------|---------------------------|---------------|
