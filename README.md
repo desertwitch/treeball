@@ -36,8 +36,8 @@ Have you ever tried browsing a large directory with `tree` or `find`, only to dr
 - Can be **listed** within the CLI in sorted or original order
 - Enable **recovery planning** (extract dummies first, replace files later)
 
-This turns what's normally a giant wall of text into a portable, organized snapshot.
-Directory trees are reshaped as artifacts - something you can archive, compare, and extract.
+This turns what's normally a giant wall of text into a portable, organized snapshot.  
+Directory trees are reshaped as artifacts - something you can archive, compare, and extract.  
 
 ### FEATURES
 
@@ -148,32 +148,32 @@ make
 #### Benchmarks:
 
 **Environment A - Medium-Performance VM:**
-> Intel i3-9100 3.60GHz (VM: 3 cores), 2GB RAM, Samsung SSD 980 NVMe, Ubuntu 24.04.2
-> Average path length: ~85 characters / Maximum directory depth: 5 levels
+> Intel i3-9100 3.60GHz (VM: 3 cores), 2GB RAM, Samsung SSD 980 NVMe, Ubuntu 24.04.2  
+> Average path length: ~85 characters / Maximum directory depth: 5 levels  
 
-| Files  | CREATE (Time / RAM / CPU)   | DIFF (Time / RAM / CPU)     | LIST (Time / RAM / CPU)      | Treeball Size  |
-|--------|-----------------------------|------------------------------|-----------------------------|----------------|
-| 5K     | 0.06 s / 11.50 MB / 133.3%  | 0.05 s / 16.63 MB / 180.0%   | 0.05 s / 10.25 MB / 100.0%  | 25 KB          |
-| 10K    | 0.10 s / 15.38 MB / 160.0%  | 0.08 s / 17.75 MB / 187.5%   | 0.08 s / 11.25 MB / 125.0%  | 49 KB          |
-| 50K    | 0.42 s / 28.38 MB / 197.6%  | 0.27 s / 26.50 MB / 214.8%   | 0.29 s / 15.75 MB / 134.5%  | 242 KB         |
-| 100K   | 1.00 s / 31.37 MB / 170.0%  | 0.57 s / 53.13 MB / 207.0%   | 0.59 s / 28.63 MB / 137.3%  | 483 KB         |
-| 500K   | 5.37 s / 34.96 MB / 160.5%  | 2.60 s / 85.00 MB / 223.5%   | 2.74 s / 41.48 MB / 143.8%  | 2.4 MB         |
-| 1M     | 11.04 s / 36.07 MB / 158.3% | 5.27 s / 79.25 MB / 222.4%   | 5.60 s / 40.88 MB / 142.5%  | 4.8 MB         |
-| 5M     | 54.45 s / 37.39 MB / 159.5% | 25.40 s / 81.12 MB / 228.5%  | 27.08 s / 41.25 MB / 145.2% | 24 MB          |
+| Files | CREATE (Time / RAM / CPU) | DIFF (Time / RAM / CPU)   | LIST (Time / RAM / CPU)   | Treeball Size |
+|-------|---------------------------|---------------------------|---------------------------|---------------|
+| 5K    | 0.06 s / 11.50 MB / 133%  | 0.05 s / 16.63 MB / 180%  | 0.05 s / 10.25 MB / 100%  | 25 KB         |
+| 10K   | 0.10 s / 15.38 MB / 160%  | 0.08 s / 17.75 MB / 188%  | 0.08 s / 11.25 MB / 125%  | 49 KB         |
+| 50K   | 0.42 s / 28.38 MB / 198%  | 0.27 s / 26.50 MB / 215%  | 0.29 s / 15.75 MB / 135%  | 242 KB        |
+| 100K  | 1.00 s / 31.37 MB / 170%  | 0.57 s / 53.13 MB / 207%  | 0.59 s / 28.63 MB / 137%  | 483 KB        |
+| 500K  | 5.37 s / 34.96 MB / 161%  | 2.60 s / 85.00 MB / 224%  | 2.74 s / 41.48 MB / 144%  | 2.4 MB        |
+| 1M    | 11.04 s / 36.07 MB / 158% | 5.27 s / 79.25 MB / 222%  | 5.60 s / 40.88 MB / 143%  | 4.8 MB        |
+| 5M    | 54.45 s / 37.39 MB / 160% | 25.40 s / 81.12 MB / 229% | 27.08 s / 41.25 MB / 145% | 24 MB         |
 
 **Environment B - High-Performance VM:**
-> Intel i5-12600K 3.69 GHz (VM: 16 cores), 32GB RAM, Samsung SSD 980 Pro NVMe, Ubuntu 24.04.2
-> Average path length: ~85 characters / Maximum directory depth: 5 levels
+> Intel i5-12600K 3.69 GHz (VM: 16 cores), 32GB RAM, Samsung SSD 980 Pro NVMe, Ubuntu 24.04.2  
+> Average path length: ~85 characters / Maximum directory depth: 5 levels  
 
-| Files  | CREATE (Time / RAM / CPU)   | DIFF (Time / RAM / CPU)     | LIST (Time / RAM / CPU)     | Treeball Size  |
-|--------|-----------------------------|------------------------------|----------------------------|----------------|
-| 5K     | 0.03 s / 21.45 MB / 133.3%  | 0.02 s / 13.36 MB / 200.0%   | 0.02 s / 10.99 MB / 100.0% | 25 KB          |
-| 10K    | 0.05 s / 24.09 MB / 180.0%  | 0.03 s / 21.47 MB / 200.0%   | 0.03 s / 13.09 MB / 100.0% | 49 KB          |
-| 50K    | 0.25 s / 36.99 MB / 172.0%  | 0.11 s / 25.87 MB / 209.1%   | 0.10 s / 17.32 MB / 130.0% | 242 KB         |
-| 100K   | 0.47 s / 37.82 MB / 176.6%  | 0.23 s / 51.90 MB / 213.0%   | 0.21 s / 31.37 MB / 123.8% | 483 KB         |
-| 500K   | 2.71 s / 38.79 MB / 156.1%  | 1.09 s / 82.40 MB / 255.0%   | 0.99 s / 45.21 MB / 139.4% | 2.4 MB         |
-| 1M     | 5.91 s / 38.57 MB / 143.7%  | 2.06 s / 81.76 MB / 255.3%   | 2.04 s / 44.82 MB / 143.6% | 4.8 MB         |
-| 5M     | 30.48 s / 42.98 MB / 139.8% | 10.04 s / 82.45 MB / 256.7%  | 9.71 s / 44.50 MB / 147.9% | 24 MB          |
+| Files | CREATE (Time / RAM / CPU) | DIFF (Time / RAM / CPU)   | LIST (Time / RAM / CPU)  | Treeball Size |
+|-------|---------------------------|---------------------------|--------------------------|---------------|
+| 5K    | 0.03 s / 21.45 MB / 133%  | 0.02 s / 13.36 MB / 200%  | 0.02 s / 10.99 MB / 100% | 25 KB         |
+| 10K   | 0.05 s / 24.09 MB / 180%  | 0.03 s / 21.47 MB / 200%  | 0.03 s / 13.09 MB / 100% | 49 KB         |
+| 50K   | 0.25 s / 36.99 MB / 172%  | 0.11 s / 25.87 MB / 209%  | 0.10 s / 17.32 MB / 130% | 242 KB        |
+| 100K  | 0.47 s / 37.82 MB / 176%  | 0.23 s / 51.90 MB / 213%  | 0.21 s / 31.37 MB / 123% | 483 KB        |
+| 500K  | 2.71 s / 38.79 MB / 156%  | 1.09 s / 82.40 MB / 255%  | 0.99 s / 45.21 MB / 139% | 2.4 MB        |
+| 1M    | 5.91 s / 38.57 MB / 143%  | 2.06 s / 81.76 MB / 255%  | 2.04 s / 44.82 MB / 143% | 4.8 MB        |
+| 5M    | 30.48 s / 42.98 MB / 139% | 10.04 s / 82.45 MB / 256% | 9.71 s / 44.50 MB / 147% | 24 MB         |
 
 > CPU usage above 100% indicates that the program is **multi-threaded** and effectively parallelized.  
 > 200% CPU usage on a system with 3 cores means the process is using **two full cores concurrently**.  
