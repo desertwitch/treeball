@@ -136,7 +136,7 @@ These flags are optional and intended for **advanced users** working with large-
 
 | Flag          | Description                                                    | Default              |
 |---------------|----------------------------------------------------------------|----------------------|
-| `--tmpdir`    | Directory for external on-disk sorting                         | Auto                 |
+| `--tmpdir`    | Directory for external on-disk sorting                         | `""` (auto)          |
 | `--workers`   | Number of parallel worker threads used during sorting/diffing  | `min(4, GOMAXPROCS)` |
 | `--chunksize` | Maximum records in memory per worker before spilling to disk   | 100000               |
 
