@@ -144,9 +144,9 @@ These optional options allow for more granular control with advanced workloads o
 
 #### `treeball create` / `treeball diff`
 
-| Flag            | Description                                         | Default |
-|-----------------|-----------------------------------------------------|---------|
-| `--compression` | Target level for compression (0: none - 9: highest) | 9       |
+| Flag            | Description                                          | Default |
+|-----------------|------------------------------------------------------|---------|
+| `--compression` | Targeted level of compression (0: none - 9: highest) | 9       |
 
 #### `treeball diff` / `treeball list`
 
