@@ -57,15 +57,15 @@ The command will compare the content of two existing (directory tree) tarballs a
 a "diff" tarball reflecting any additions or removals, comparing the "old" and "new" tarball.
 This helps to identify which files were recently added or lost (e.g., for recovery scenarios).
 
-The necessary sortings and the comparison itself are done using a streamed approach, scaling
-efficiently up to multiple millions of files and off-loading batches into temporary files, in
-order to preserve system resources where necessary. For tarballs containing multiple millions
-of files it is recommended to specify an on-disk temporary file location using --tmpdir <path>.
-
 Any differences will also be written to standard output (stdout), while any other operational
 output will be written to standard error (stderr). The program will return with an exit code
 0 in case no differences were found; with an exit code 1 in case some differences were found.
-`
+
+Performance considerations with massive archives:
+The external sorting mechanism may off-load excess data to on-disk locations to conserve RAM.
+Ensure that a suitable --tmpdir is provided (in terms of speed and available space), as such
+data can peak at multiple gigabytes. If none is provided, the intelligent mechanism will try
+choose one for you, falling back to the system's default temporary file location on failure.`
 
 	diffExample = `
 # Basic usage of the command:
@@ -87,7 +87,13 @@ if that would otherwise be needed.
 
 All listed paths are printed to standard output (stdout), while any operational output and
 encountered errors will be written to standard error (stderr) respectively. The command
-returns with an exit code 0 upon success; an exit code 2 for any encountered errors.`
+returns with an exit code 0 upon success; an exit code 2 for any encountered errors.
+
+Performance considerations with massive archives:
+The external sorting mechanism may off-load excess data to on-disk locations to conserve RAM.
+Ensure that a suitable --tmpdir is provided (in terms of speed and available space), as such
+data can peak at multiple gigabytes. If none is provided, the intelligent mechanism will try
+choose one for you, falling back to the system's default temporary file location on failure.`
 
 	listExample = `
 # List as sorted the contents of a tarball:
