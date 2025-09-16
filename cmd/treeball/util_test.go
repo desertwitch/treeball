@@ -3,6 +3,7 @@ package main
 import (
 	"archive/tar"
 	"bytes"
+	"errors"
 	"io"
 	"testing"
 
@@ -10,37 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Expectation: The tar buffer should contain the appropriate files and folders.
-func Test_WriteDummyFile_Success(t *testing.T) {
-	var buf bytes.Buffer
-
-	tw := tar.NewWriter(&buf)
-	require.NotNil(t, tw)
-
-	require.NoError(t, writeDummyFile(tw, "foo.txt", false))
-	require.NoError(t, writeDummyFile(tw, "bar", true))
-	require.NoError(t, tw.Close())
-
-	tr := tar.NewReader(&buf)
-	require.NotNil(t, tr)
-
-	var names []string
-	for {
-		hdr, err := tr.Next()
-
-		if err == io.EOF {
-			break
-		}
-
-		require.NoError(t, err)
-		names = append(names, hdr.Name)
-	}
-
-	require.Equal(t, []string{"foo.txt", "bar/"}, names)
-}
-
 // Expectation: The function should handle the exclusions according to the table's expectations.
-func Test_IsExcluded_Table(t *testing.T) {
+func Test_isExcluded_Table(t *testing.T) {
 	tests := []struct {
 		name     string
 		path     string
@@ -142,7 +114,36 @@ func Test_IsExcluded_Table(t *testing.T) {
 	}
 }
 
-// Expecation: The channels should contain the correct paths and no errors.
+// Expectation: The tar buffer should contain the appropriate files and folders.
+func Test_writeDummyFile_Success(t *testing.T) {
+	var buf bytes.Buffer
+
+	tw := tar.NewWriter(&buf)
+	require.NotNil(t, tw)
+
+	require.NoError(t, writeDummyFile(tw, "foo.txt", false))
+	require.NoError(t, writeDummyFile(tw, "bar", true))
+	require.NoError(t, tw.Close())
+
+	tr := tar.NewReader(&buf)
+	require.NotNil(t, tr)
+
+	var names []string
+	for {
+		hdr, err := tr.Next()
+
+		if err == io.EOF {
+			break
+		}
+
+		require.NoError(t, err)
+		names = append(names, hdr.Name)
+	}
+
+	require.Equal(t, []string{"foo.txt", "bar/"}, names)
+}
+
+// Expecation: The channels should contain the correct ordered paths and no errors.
 func Test_tarPathStream_Sorted_Success(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
@@ -164,7 +165,7 @@ func Test_tarPathStream_Sorted_Success(t *testing.T) {
 	require.Equal(t, []string{"b/", "b/c.txt", "z.txt"}, got)
 }
 
-// Expecation: The channels should contain the correct paths and no errors.
+// Expecation: The channels should contain the correct ordered paths and no errors.
 func Test_tarPathStream_Unsorted_Success(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
@@ -207,5 +208,54 @@ func Test_tarPathStream_Open_Error(t *testing.T) {
 		require.Contains(t, err.Error(), "simulated open failure")
 	default:
 		t.Fatal("expected error from tarPathStream")
+	}
+}
+
+// Expectation: The channels should contain the correct ordered paths and no errors.
+func Test_extsortStrings_Success(t *testing.T) {
+	in := make(chan string, 3)
+	in <- "c"
+	in <- "a"
+	in <- "b"
+	close(in)
+
+	extErrs := make(chan error)
+	close(extErrs)
+
+	out, errs := extsortStrings(t.Context(), in, extErrs, &extSortConfigDefault)
+
+	got := []string{}
+	for p := range out {
+		got = append(got, p)
+	}
+
+	for err := range errs {
+		require.NoError(t, err)
+	}
+
+	require.Equal(t, []string{"a", "b", "c"}, got)
+}
+
+// Expectation: The channels should contain the correct error and no paths.
+func Test_extsortStrings_extErrs_Error(t *testing.T) {
+	in := make(chan string)
+	close(in)
+
+	extErrs := make(chan error, 1)
+	extErrs <- errors.New("simulated external error")
+	close(extErrs)
+
+	out, errs := extsortStrings(t.Context(), in, extErrs, &extSortConfigDefault)
+
+	for range out {
+		t.Fatal("should not receive any output")
+	}
+
+	select {
+	case err := <-errs:
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "simulated external error")
+	default:
+		t.Fatal("expected error from extsortStrings")
 	}
 }
