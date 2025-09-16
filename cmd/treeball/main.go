@@ -53,7 +53,7 @@ const (
 )
 
 var (
-	// Version is populated by the build process (Makefile).
+	// Version is automatically populated by the build process (Makefile).
 	Version string
 
 	//nolint:mnd
@@ -65,7 +65,7 @@ var (
 		TempFilesDir:       "",                       // Temporary files directory (default: intelligent selection)
 	}
 
-	// ErrDiffsFound is an exit-code relevant sentinel error to be handled upstream.
+	// ErrDiffsFound is an exit-code relevant sentinel error.
 	ErrDiffsFound = errors.New("differences were found")
 )
 

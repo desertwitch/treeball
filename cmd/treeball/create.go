@@ -10,7 +10,12 @@ import (
 	pgzip "github.com/klauspost/pgzip"
 )
 
-// Create produces a tarball of a target directory structure, the files as empty dummies.
+// Create produces a tarball of a target directory structure.
+// Any encountered files are replaced with zero-byte empty dummies.
+//
+// The input parameter specifies the root directory to package. The output
+// parameter is the path of the tarball file to create. Any paths matching the
+// excludes slice are skipped. The ctx parameter controls early cancellation.
 func (prog *Program) Create(ctx context.Context, input string, output string, excludes []string) error {
 	var creationDone bool
 

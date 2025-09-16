@@ -11,7 +11,17 @@ import (
 	"github.com/lanrat/extsort/diff"
 )
 
-// Diff produces a tarball consisting of the differences between two given tarballs.
+// Diff produces a tarball containing the differences between two given
+// tarballs. Any encountered files are replaced with zero-byte empty dummies.
+//
+// The cmpOld parameter is the path to the original tarball, and cmpNew is the
+// path to the new tarball. The output parameter specifies the path of the
+// resulting diff tarball, which contains synthetic folders marking added and
+// removed paths (+++ and ---). The ctx parameter controls early cancellation.
+//
+// If differences are found, Diff returns a non-nil *diff.Result along with
+// ErrDiffsFound. If no differences are found, the output file is removed before
+// returning. Any other returned error indicates a generic failure (I/O, sorting, etc).
 func (prog *Program) Diff(ctx context.Context, cmpOld string, cmpNew string, output string) (*diff.Result, error) { //nolint:unparam
 	var hasDifferences bool
 
