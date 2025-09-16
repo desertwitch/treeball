@@ -100,7 +100,7 @@ treeball diff old.tar.gz new.tar.gz diff.tar.gz --tmpdir=/mnt/largedisk
 
 Beware the diff archive contains synthetic `+++` and `---` directories to reflect both additions and removals.
 
-> **Performance considerations with large archives (500K+ paths):**  
+> **Performance considerations with large archives:**  
 > The external sorting mechanism will off-load excess data to on-disk locations (controllable with `--tmpdir`) to conserve RAM.
 > Ensure that a suitable location is provided (in terms of speed and available space) as such data can peak at multiple gigabytes.
 > If none is provided the intelligent mechanism will try to find one, falling back to the system's default temporary file location.
@@ -126,7 +126,7 @@ treeball list archive.tar.gz --sort=false
 treeball list archive.tar.gz --tmpdir=/mnt/largedisk
 ```
 
-> **Performance considerations with large archives (500K+ paths):**  
+> **Performance considerations with large archives:**  
 > The external sorting mechanism will off-load excess data to on-disk locations (controllable with `--tmpdir`) to conserve RAM.
 > Ensure that a suitable location is provided (in terms of speed and available space) as such data can peak at multiple gigabytes.
 > If none is provided the intelligent mechanism will try to find one, falling back to the system's default temporary file location.
@@ -177,8 +177,8 @@ make
 ### BENCHMARKS
 
 #### Environment A - Medium-Performance VM:
-> Intel i3-9100 3.60GHz (VM: 3 cores), 2GB RAM, Samsung SSD 980 NVMe, Ubuntu 24.04.2  
-> Average path length: ~85 characters / Maximum directory depth: 5 levels / Defaults  
+Intel i3-9100 3.60GHz (VM: 3 cores), 2GB RAM, Samsung SSD 980 NVMe, Ubuntu 24.04.2  
+Average path length: ~85 characters / Maximum directory depth: 5 levels / Defaults  
 
 | Files | CREATE (Time / RAM / CPU) | DIFF (Time / RAM / CPU)   | LIST (Time / RAM / CPU)   | Treeball Size |
 |-------|---------------------------|---------------------------|---------------------------|---------------|
@@ -193,8 +193,8 @@ make
 > CPU usage above 100% indicates that the program is **multi-threaded** and effectively parallelized.  
 
 #### Environment B - High-Performance VM:
-> Intel i5-12600K 3.69 GHz (VM: 16 cores), 32GB RAM, Samsung SSD 980 Pro NVMe, Ubuntu 24.04.2  
-> Average path length: ~85 characters / Maximum directory depth: 5 levels / Defaults  
+Intel i5-12600K 3.69 GHz (VM: 16 cores), 32GB RAM, Samsung SSD 980 Pro NVMe, Ubuntu 24.04.2  
+Average path length: ~85 characters / Maximum directory depth: 5 levels / Defaults  
 
 | Files | CREATE (Time / RAM / CPU) | DIFF (Time / RAM / CPU)   | LIST (Time / RAM / CPU)  | Treeball Size |
 |-------|---------------------------|---------------------------|--------------------------|---------------|
