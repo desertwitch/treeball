@@ -134,11 +134,11 @@ These flags are optional and intended for **advanced users** working with large-
 
 #### `treeball diff` / `treeball list`
 
-| Flag          | Description                                                    | Default              |
-|---------------|----------------------------------------------------------------|----------------------|
-| `--tmpdir`    | Directory for external on-disk sorting                         | `""` (auto)          |
-| `--workers`   | Number of parallel worker threads used during sorting/diffing  | `min(4, GOMAXPROCS)` |
-| `--chunksize` | Maximum records in memory per worker before spilling to disk   | 100000               |
+| Flag          | Description                                                    | Default               |
+|---------------|----------------------------------------------------------------|-----------------------|
+| `--tmpdir`    | Directory for external on-disk sorting                         | `""` (auto)           |
+| `--workers`   | Number of parallel worker threads used during sorting/diffing  | `GOMAXPROCS` (max. 4) |
+| `--chunksize` | Maximum records in memory per worker before spilling to disk   | 100000                |
 
 You should use `--tmpdir` to point to high-speed local storage (e.g., NVMe scratch disk) for large workloads.
 
