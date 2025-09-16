@@ -190,8 +190,6 @@ Average path length: ~85 characters / Maximum directory depth: 5 levels / Defaul
 | 1M    | 11.04 s / 36.07 MB / 158% | 5.27 s / 79.25 MB / 222%  | 5.60 s / 40.88 MB / 143%  | 4.8 MB        |
 | 5M    | 54.45 s / 37.39 MB / 160% | 25.40 s / 81.12 MB / 229% | 27.08 s / 41.25 MB / 145% | 24 MB         |
 
-> CPU usage above 100% indicates that the program is **multi-threaded** and effectively parallelized.  
-
 #### Environment B - High-Performance VM:
 Intel i5-12600K 3.69 GHz (VM: 16 cores), 32GB RAM, Samsung SSD 980 Pro NVMe, Ubuntu 24.04.2  
 Average path length: ~85 characters / Maximum directory depth: 5 levels / Defaults  
