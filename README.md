@@ -141,7 +141,7 @@ These flags are optional and intended for advanced users working with large-scal
 | `--chunksize` | Maximum in-memory records per worker (before spilling to disk) | 100000                       |
 
 > $^{1}$ You should use `--tmpdir` to point to high-speed storage (e.g., NVMe scratch disk) for best performance.  
-> $^{2}$ When `GOMAXPROCS` is smaller than 4, that will be chosen as default - otherwise `--workers` will _default_ to 4.  
+> $^{2}$ When `GOMAXPROCS` is smaller than 4, that will be chosen as _default_ - otherwise `--workers` will _default_ to 4.  
 
 ### EXIT CODES
   - `0` - Success
