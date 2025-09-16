@@ -19,7 +19,7 @@ func Test_Program_List_Sorted_Success(t *testing.T) {
 
 	var stdoutBuf bytes.Buffer
 
-	prog := NewProgram(fs, &stdoutBuf, io.Discard, nil)
+	prog := NewProgram(fs, &stdoutBuf, io.Discard, nil, nil)
 	require.NoError(t, prog.List(t.Context(), "/archive.tar.gz", true))
 
 	paths := strings.Split(strings.TrimSpace(stdoutBuf.String()), "\n")
@@ -34,7 +34,7 @@ func Test_Program_List_Unsorted_Success(t *testing.T) {
 
 	var stdoutBuf bytes.Buffer
 
-	prog := NewProgram(fs, &stdoutBuf, io.Discard, nil)
+	prog := NewProgram(fs, &stdoutBuf, io.Discard, nil, nil)
 	require.NoError(t, prog.List(t.Context(), "/archive.tar.gz", false))
 
 	paths := strings.Split(strings.TrimSpace(stdoutBuf.String()), "\n")
@@ -52,6 +52,6 @@ func Test_Program_List_CtxCancel_Error(t *testing.T) {
 
 	var stdoutBuf, stderrBuf bytes.Buffer
 
-	prog := NewProgram(fs, &stdoutBuf, &stderrBuf, nil)
+	prog := NewProgram(fs, &stdoutBuf, &stderrBuf, nil, nil)
 	require.ErrorIs(t, prog.List(ctx, "/archive.tar.gz", false), context.Canceled)
 }

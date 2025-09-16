@@ -121,6 +121,27 @@ treeball list archive.tar.gz --sort=false
 treeball list archive.tar.gz --tmpdir=/mnt/largedisk
 ```
 
+### ADVANCED OPTIONS
+
+These flags are optional and intended for **advanced users** working with large-scale directories (millions of files) or otherwise tuning `treeball` for specific hardware setups. Most users can ignore these unless dealing with performance constraints or custom environments.
+
+#### `treeball create`
+
+| Flag           | Description                                         | Default    |
+|----------------|-----------------------------------------------------|------------|
+| `--blocksize`  | Compression block size                              | 1048576    |
+| `--blockcount` | Number of compression blocks processed in parallel  | GOMAXPROCS |
+
+#### `treeball diff` / `treeball list`
+
+| Flag          | Description                                                    | Default              |
+|---------------|----------------------------------------------------------------|----------------------|
+| `--tmpdir`    | Directory for external on-disk sorting                         | Auto                 |
+| `--workers`   | Number of parallel worker threads used during sorting/diffing  | GOMAXPROCS or max. 4 |
+| `--chunksize` | Maximum records in memory per worker before spilling to disk   | 100000               |
+
+> You should use `--tmpdir` to point to high-speed local storage (e.g., NVMe scratch disk) for large workloads.
+
 ### EXIT CODES
   - `0` - Success
   - `1` - Differences found (only for `diff`)

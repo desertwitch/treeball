@@ -19,7 +19,7 @@ func Test_Program_Create_Success(t *testing.T) {
 	require.NoError(t, afero.WriteFile(fs, "/src/a.txt", []byte("a"), 0o644))
 	require.NoError(t, afero.WriteFile(fs, "/src/b/c.txt", []byte("c"), 0o644))
 
-	prog := NewProgram(fs, io.Discard, io.Discard, nil)
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
 	require.NoError(t, prog.Create(t.Context(), "/src", "/out.tar.gz", []string{}))
 
 	f, err := fs.Open("/out.tar.gz")
@@ -52,7 +52,7 @@ func Test_Program_Create_WithExcludes_Success(t *testing.T) {
 	require.NoError(t, afero.WriteFile(fs, "/src/a.txt", []byte("a"), 0o644))
 	require.NoError(t, afero.WriteFile(fs, "/src/b/c.txt", []byte("c"), 0o644))
 
-	prog := NewProgram(fs, io.Discard, io.Discard, nil)
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
 	require.NoError(t, prog.Create(t.Context(), "/src", "/out.tar.gz", []string{"/src/b"}))
 
 	f, err := fs.Open("/out.tar.gz")
@@ -85,7 +85,7 @@ func Test_Program_Create_WithFileExcludes_Success(t *testing.T) {
 	require.NoError(t, afero.WriteFile(fs, "/src/a.txt", []byte("a"), 0o644))
 	require.NoError(t, afero.WriteFile(fs, "/src/b/c.txt", []byte("c"), 0o644))
 
-	prog := NewProgram(fs, io.Discard, io.Discard, nil)
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
 	require.NoError(t, prog.Create(t.Context(), "/src", "/out.tar.gz", []string{"/src/b/c.txt"}))
 
 	f, err := fs.Open("/out.tar.gz")
@@ -121,7 +121,7 @@ func Test_Program_Create_CtxCancel_Error(t *testing.T) {
 
 	cancel()
 
-	prog := NewProgram(fs, io.Discard, io.Discard, nil)
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
 	require.ErrorIs(t, prog.Create(ctx, "/src", "/out.tar.gz", []string{}), context.Canceled)
 
 	_, err := fs.Stat("/out.tar.gz")

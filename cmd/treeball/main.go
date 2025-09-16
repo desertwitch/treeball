@@ -57,12 +57,18 @@ var (
 	Version string
 
 	//nolint:mnd
+	pgzipConfigDefault = PgzipConfig{
+		BlockSize:  1 << 20,               // Approximate size of blocks
+		BlockCount: runtime.GOMAXPROCS(0), // Amount of blocks processing in parallel
+	}
+
+	//nolint:mnd
 	extSortConfigDefault = extsort.Config{
-		ChunkSize:          100_000,                  // Records per chunk (default: 1M)
-		NumWorkers:         min(4, runtime.NumCPU()), // Parallel sorting/merging workers (default: 2)
-		ChanBuffSize:       1,                        // Channel buffer size (default: 1)
-		SortedChanBuffSize: 1000,                     // Output channel buffer (default: 1000)
-		TempFilesDir:       "",                       // Temporary files directory (default: intelligent selection)
+		ChunkSize:          100_000,                       // Records per chunk (default: 1M)
+		NumWorkers:         min(4, runtime.GOMAXPROCS(0)), // Parallel sorting/merging workers (default: 2)
+		ChanBuffSize:       1,                             // Channel buffer size (default: 1)
+		SortedChanBuffSize: 1000,                          // Output channel buffer (default: 1000)
+		TempFilesDir:       "",                            // Temporary files directory (default: intelligent selection)
 	}
 
 	// ErrDiffsFound is an exit-code relevant sentinel error.
@@ -77,11 +83,12 @@ type Program struct {
 	stdout io.Writer
 	stderr io.Writer
 
+	pgzipConfig   *PgzipConfig
 	extSortConfig *extsort.Config
 }
 
 // NewProgram returns a pointer to a new [Program].
-func NewProgram(fs afero.Fs, stdout io.Writer, stderr io.Writer, extsortConfig *extsort.Config) *Program {
+func NewProgram(fs afero.Fs, stdout io.Writer, stderr io.Writer, pgzipConfig *PgzipConfig, extsortConfig *extsort.Config) *Program {
 	var walker Walker
 
 	if fs == nil {
@@ -94,6 +101,11 @@ func NewProgram(fs afero.Fs, stdout io.Writer, stderr io.Writer, extsortConfig *
 
 	if stderr == nil {
 		stderr = os.Stderr
+	}
+
+	if pgzipConfig == nil {
+		cfg := pgzipConfigDefault
+		pgzipConfig = &cfg
 	}
 
 	if extsortConfig == nil {
@@ -112,6 +124,7 @@ func NewProgram(fs afero.Fs, stdout io.Writer, stderr io.Writer, extsortConfig *
 		fsWalker:      walker,
 		stdout:        stdout,
 		stderr:        stderr,
+		pgzipConfig:   pgzipConfig,
 		extSortConfig: extsortConfig,
 	}
 }
@@ -131,6 +144,7 @@ func newRootCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Wr
 	rootCmd.SetOut(stdout)
 	rootCmd.SetErr(stderr)
 
+	createCompressorConfig := pgzipConfigDefault
 	createCmd := &cobra.Command{
 		Use:     "create <root-folder> <output.tar.gz>",
 		Short:   createHelpShort,
@@ -138,12 +152,14 @@ func newRootCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Wr
 		Example: createExample,
 		Args:    cobra.ExactArgs(2), //nolint:mnd
 		RunE: func(_ *cobra.Command, args []string) error {
-			prog := NewProgram(fs, stdout, stderr, nil)
+			prog := NewProgram(fs, stdout, stderr, &createCompressorConfig, nil)
 
 			return prog.Create(ctx, args[0], args[1], createExcludes)
 		},
 	}
 	createCmd.Flags().StringArrayVar(&createExcludes, "exclude", nil, "path to exclude; can be repeated multiple times")
+	createCmd.Flags().IntVar(&createCompressorConfig.BlockSize, "blocksize", pgzipConfigDefault.BlockSize, "block size for compressing")
+	createCmd.Flags().IntVar(&createCompressorConfig.BlockCount, "blockcount", pgzipConfigDefault.BlockCount, "blocks to compress in parallel")
 
 	diffSorterConfig := extSortConfigDefault
 	diffCmd := &cobra.Command{
@@ -153,13 +169,15 @@ func newRootCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Wr
 		Example: diffExample,
 		Args:    cobra.ExactArgs(3), //nolint:mnd
 		RunE: func(_ *cobra.Command, args []string) error {
-			prog := NewProgram(fs, stdout, stderr, &diffSorterConfig)
+			prog := NewProgram(fs, stdout, stderr, nil, &diffSorterConfig)
 			_, err := prog.Diff(ctx, args[0], args[1], args[2])
 
 			return err
 		},
 	}
-	diffCmd.Flags().StringVar(&diffSorterConfig.TempFilesDir, "tmpdir", "", "on-disk location for intermediate files")
+	diffCmd.Flags().StringVar(&diffSorterConfig.TempFilesDir, "tmpdir", extSortConfigDefault.TempFilesDir, "on-disk location for intermediate files")
+	diffCmd.Flags().IntVar(&diffSorterConfig.NumWorkers, "workers", extSortConfigDefault.NumWorkers, "workers for concurrent operations")
+	diffCmd.Flags().IntVar(&diffSorterConfig.ChunkSize, "chunksize", extSortConfigDefault.ChunkSize, "max records per worker before spilling to disk")
 
 	listSort := true
 	listSorterConfig := extSortConfigDefault
@@ -170,13 +188,15 @@ func newRootCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Wr
 		Example: listExample,
 		Args:    cobra.ExactArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
-			prog := NewProgram(fs, stdout, stderr, &listSorterConfig)
+			prog := NewProgram(fs, stdout, stderr, nil, &listSorterConfig)
 
 			return prog.List(ctx, args[0], listSort)
 		},
 	}
 	listCmd.Flags().BoolVar(&listSort, "sort", true, "sort the output list; for better comparability")
-	listCmd.Flags().StringVar(&listSorterConfig.TempFilesDir, "tmpdir", "", "on-disk location for intermediate files")
+	listCmd.Flags().StringVar(&listSorterConfig.TempFilesDir, "tmpdir", extSortConfigDefault.TempFilesDir, "on-disk location for intermediate files")
+	listCmd.Flags().IntVar(&listSorterConfig.NumWorkers, "workers", extSortConfigDefault.NumWorkers, "workers for concurrent operations")
+	listCmd.Flags().IntVar(&listSorterConfig.ChunkSize, "chunksize", extSortConfigDefault.ChunkSize, "max records per worker before spilling to disk")
 
 	rootCmd.AddCommand(createCmd, diffCmd, listCmd)
 

@@ -16,6 +16,12 @@ import (
 	"github.com/spf13/afero"
 )
 
+// PgzipConfig is the configuration for concurrent gzip operations.
+type PgzipConfig struct {
+	BlockSize  int // Approximate size of blocks
+	BlockCount int // Amount of blocks processing in parallel
+}
+
 // Walker is an interface describing a filesystem walking function.
 type Walker interface {
 	WalkDir(root string, fn fs.WalkDirFunc) error

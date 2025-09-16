@@ -37,6 +37,10 @@ func (prog *Program) Create(ctx context.Context, input string, output string, ex
 	}
 	defer gw.Close()
 
+	if err := gw.SetConcurrency(prog.pgzipConfig.BlockSize, prog.pgzipConfig.BlockCount); err != nil {
+		return fmt.Errorf("failed to set gzip writer settings: %w", err)
+	}
+
 	tw := tar.NewWriter(gw)
 	defer tw.Close()
 
