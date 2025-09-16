@@ -123,7 +123,7 @@ treeball list archive.tar.gz --tmpdir=/mnt/largedisk
 
 ### ADVANCED OPTIONS
 
-These flags are optional and intended for **advanced users** working with large-scale directories (millions of files) or otherwise tuning `treeball` for specific hardware setups. Most users can ignore these unless dealing with performance constraints or custom environments.
+These flags are optional and intended for advanced users working with large-scale directories (multiple millions of files) or otherwise tuning `treeball` for specific hardware setups. Most users can safely ignore these unless dealing with performance constraints or custom environments.
 
 #### `treeball create`
 
@@ -136,11 +136,11 @@ These flags are optional and intended for **advanced users** working with large-
 
 | Flag          | Description                                                    | Default               |
 |---------------|----------------------------------------------------------------|-----------------------|
-| `--tmpdir`    | Directory for external on-disk sorting                         | `""` (auto)           |
+| `--tmpdir`    | On-disk directory for external sorting                         | `""` (auto)           |
 | `--workers`   | Number of parallel worker threads used during sorting/diffing  | `GOMAXPROCS` (max. 4) |
 | `--chunksize` | Maximum records in memory per worker before spilling to disk   | 100000                |
 
-You should use `--tmpdir` to point to high-speed local storage (e.g., NVMe scratch disk) for large workloads.
+You should use `--tmpdir` to point to high-speed local storage (e.g., NVMe scratch disk) for best performance.
 
 ### EXIT CODES
   - `0` - Success
