@@ -39,7 +39,7 @@ An important step in recovering from catastrophic data loss is knowing what you 
 - Can be **listed** within the CLI in sorted or original order
 - Enable **recovery planning** (extract dummies first, replace files later)
 
-This turns what's normally a giant wall of text into a portable, organized snapshot.  
+This turns what's normally a giant wall of text into a portable, well organized snapshot.  
 Directory trees are reshaped as artifacts - something you can archive, compare, and extract.  
 
 ### FEATURES
@@ -65,7 +65,7 @@ Build a `.tar.gz` archive from a directory tree.
 treeball create <root-folder> <output.tar.gz> [--exclude=PATH --exclude=PATH...]
 ```
 
-Beware excludes must be written in the same absolute/relative form as the `<root-folder>`.
+Beware `--exclude` paths must be written in the same absolute/relative form as the `<root-folder>`.
 
 **Examples:**
 
@@ -98,7 +98,7 @@ treeball diff base.tar.gz updated.tar.gz /dev/null
 treeball diff old.tar.gz new.tar.gz diff.tar.gz --tmpdir=/mnt/largedisk
 ```
 
-Beware the diff archive contains synthetic `+++` and `---` directories to reflect both additions and removals.
+Beware the `diff` archive contains synthetic `+++` and `---` directories to reflect both additions and removals.
 
 > **Performance considerations with massive archives:**
 > The external sorting mechanism may off-load excess data to on-disk locations (controllable with `--tmpdir`) to conserve RAM.
