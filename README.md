@@ -170,10 +170,10 @@ make
 | 5K    | 0.03 s / 21.45 MB / 133%  | 0.02 s / 13.36 MB / 200%  | 0.02 s / 10.99 MB / 100% | 25 KB         |
 | 10K   | 0.05 s / 24.09 MB / 180%  | 0.03 s / 21.47 MB / 200%  | 0.03 s / 13.09 MB / 100% | 49 KB         |
 | 50K   | 0.25 s / 36.99 MB / 172%  | 0.11 s / 25.87 MB / 209%  | 0.10 s / 17.32 MB / 130% | 242 KB        |
-| 100K  | 0.47 s / 37.82 MB / 176%  | 0.23 s / 51.90 MB / 213%  | 0.21 s / 31.37 MB / 123% | 483 KB        |
+| 100K  | 0.47 s / 37.82 MB / 177%  | 0.23 s / 51.90 MB / 213%  | 0.21 s / 31.37 MB / 123% | 483 KB        |
 | 500K  | 2.71 s / 38.79 MB / 156%  | 1.09 s / 82.40 MB / 255%  | 0.99 s / 45.21 MB / 139% | 2.4 MB        |
-| 1M    | 5.91 s / 38.57 MB / 143%  | 2.06 s / 81.76 MB / 255%  | 2.04 s / 44.82 MB / 143% | 4.8 MB        |
-| 5M    | 30.48 s / 42.98 MB / 139% | 10.04 s / 82.45 MB / 256% | 9.71 s / 44.50 MB / 147% | 24 MB         |
+| 1M    | 5.91 s / 38.57 MB / 144%  | 2.06 s / 81.76 MB / 255%  | 2.04 s / 44.82 MB / 144% | 4.8 MB        |
+| 5M    | 30.48 s / 42.98 MB / 140% | 10.04 s / 82.45 MB / 257% | 9.71 s / 44.50 MB / 148% | 24 MB         |
 
 > CPU usage above 100% indicates that the program is **multi-threaded** and effectively parallelized.  
 > 200% CPU usage on a system with 3 cores means the process is using **two full cores concurrently**.  
