@@ -157,7 +157,7 @@ These optional options allow for more granular control with advanced workloads o
 | `--chunksize` | Maximum in-memory records per worker (before spilling to disk) | 100000                       |
 
 > $^{1}$ You should use `--tmpdir` to point to high-speed storage (e.g., NVMe scratch disk) for best performance.  
-> $^{2}$ You should ensure that `--tmpdir` has sufficient free space, up to several gigabytes for advanced workloads.  
+> $^{2}$ You should ensure `--tmpdir` has sufficient free space of up to several gigabytes for advanced workloads.  
 > $^{3}$ When `GOMAXPROCS` is smaller than 4, that will be chosen as _default_ - otherwise `--workers` will _default_ to 4.  
 
 ### EXIT CODES
