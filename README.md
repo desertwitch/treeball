@@ -142,6 +142,12 @@ These optional options allow for more granular control with advanced workloads o
 | `--blocksize`  | Compression block size                              | 1048576      |
 | `--blockcount` | Number of compression blocks processed in parallel  | `GOMAXPROCS` |
 
+#### `treeball create` / `treeball diff`
+
+| Flag            | Description                                         | Default |
+|-----------------|-----------------------------------------------------|---------|
+| `--compression` | Target level for compression (0: none - 9: highest) | 9       |
+
 #### `treeball diff` / `treeball list`
 
 | Flag          | Description                                                    | Default                      |
