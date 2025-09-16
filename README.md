@@ -138,7 +138,7 @@ These flags are optional and intended for advanced users working with large-scal
 |---------------|----------------------------------------------------------------|-----------------------|
 | `--tmpdir`    | On-disk directory for external sorting                         | `""` (auto)           |
 | `--workers`   | Number of parallel worker threads used during sorting/diffing  | `GOMAXPROCS` (max. 4) |
-| `--chunksize` | Maximum records in memory per worker before spilling to disk   | 100000                |
+| `--chunksize` | Maximum in-memory records per worker (before spilling to disk) | 100000                |
 
 You should use `--tmpdir` to point to high-speed local storage (e.g., NVMe scratch disk) for best performance.
 
