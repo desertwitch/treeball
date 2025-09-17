@@ -195,7 +195,7 @@ Benchmarks demonstrate performance across small to large directory trees.
 
 > CPU usage above 100% indicates that the program is **multi-threaded** and effectively parallelized.  
 > RAM usage per million files drops significantly with scale due to **external sorting** and streaming data.  
-> Additional [stress tests](./PERFORMANCE.md) with trees **up to 400M files** have shown continued low resource consumption.  
+> [Stress tests](./PERFORMANCE.md) with trees of **up to 400 million files** have shown continued low resource consumption trends.  
 
 **Benchmark Environment**:  
 Average path length: ~80 characters / Maximum directory depth: 5 levels  
