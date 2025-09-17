@@ -183,7 +183,7 @@ make
 
 ### BENCHMARKS
 
-Benchmarks demonstrate performance across small to large directory trees.
+Benchmarks demonstrate reliable performance across small to large directory trees.
 
 | Files  | CREATE (Time / RAM / CPU)    | DIFF (Time / RAM / CPU)      | LIST (Time / RAM / CPU)      | Treeball Size |
 |--------|------------------------------|------------------------------|------------------------------|---------------|
