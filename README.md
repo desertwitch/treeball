@@ -50,7 +50,7 @@ Directory trees are reshaped as artifacts - something you can archive, compare, 
 - **List** the contents of a tree tarball (sorted or original order)
 
 #### Operational strengths:
-- Works efficiently even with **millions of files** (with [benchmarks](#benchmarks))
+- Works efficiently even with **millions of files** (see [benchmarks](#benchmarks))
 - Streams data and uses external sorting for a **low resource profile**
 - Clear, **scriptable output** via `stdout` / `stderr` (no useless chatter)
 - Fully **tested** (including exclusion logic, signal handling, edge cases)
