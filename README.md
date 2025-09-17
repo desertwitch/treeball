@@ -150,15 +150,15 @@ These optional options allow for more granular control with advanced workloads o
 
 #### `treeball diff` / `treeball list`
 
-| Flag          | Description                                                    | Default                      |
-|---------------|----------------------------------------------------------------|------------------------------|
-| `--tmpdir`    | On-disk directory for external sorting                         | `""` (auto) $^{1}$ $^{2}$    |
-| `--workers`   | Number of parallel worker threads used for sorting/diffing     | `GOMAXPROCS` (max. 4) $^{3}$ |
-| `--chunksize` | Maximum in-memory records per worker (before spilling to disk) | 100000                       |
+| Flag          | Description                                                    | Default                               |
+|---------------|----------------------------------------------------------------|---------------------------------------|
+| `--tmpdir`    | On-disk directory for external sorting                         | `""` (auto) <sup>1,</sup><sup>2</sup> |
+| `--workers`   | Number of parallel worker threads used for sorting/diffing     | `GOMAXPROCS` <sup>3</sup>             |
+| `--chunksize` | Maximum in-memory records per worker (before spilling to disk) | 100000                                |
 
-> $^{1}$ You should use `--tmpdir` to point to high-speed storage (e.g., NVMe scratch disk) for best performance.  
-> $^{2}$ You should ensure `--tmpdir` has sufficient free space of up to several gigabytes for advanced workloads.  
-> $^{3}$ When `GOMAXPROCS` is smaller than 4, that will be chosen as _default_ - otherwise `--workers` will _default_ to 4.  
+> <sup>1</sup> You should use `--tmpdir` to point to high-speed storage (e.g., NVMe scratch disk) for best performance.  
+> <sup>2</sup> You should ensure `--tmpdir` has sufficient free space of up to several gigabytes for advanced workloads.  
+> <sup>3</sup> When `GOMAXPROCS` is smaller than 4, that will be chosen as _default_ - otherwise `--workers` will _default_ to 4.  
 
 ### EXIT CODES
   - `0` - Success
@@ -183,20 +183,19 @@ make
 
 ### BENCHMARKS
 
-The benchmarks demonstrate performance across small to massive directory trees.
+Benchmarks demonstrate performance across small to large directory trees.
 
-| Files  | CREATE (Time / RAM / CPU)     | DIFF (Time / RAM / CPU)      | LIST (Time / RAM / CPU)      | Treeball Size |
-|--------|-------------------------------|------------------------------|------------------------------|---------------|
-| 10K    | 0.04 s / 26.63 MB / 200%      | 0.04 s / 14.73 MB / 175%     | 0.03 s / 13.02 MB / 100%     | 49 KB         |
-| 500K   | 0.95 s / 56.55 MB / 425%      | 1.05 s / 83.87 MB / 255%     | 0.95 s / 44.42 MB / 148%     | 2.4 MB        |
-| **1M** | **1.94 s / 57.23 MB / 422%**  | **1.97 s / 81.84 MB / 253%** | **1.87 s / 43.13 MB / 151%** | **4.8 MB**    |
-| 5M     | 12.99 s / 62.99 MB / 317%     | 9.97 s / 82.31 MB / 252%     | 9.32 s / 47.24 MB / 151%     | 24 MB         |
-| 10M    | 29.78 s / 58.88 MB / 277%     | 19.37 s / 84.13 MB / 260%    | 18.80 s / 45.23 MB / 150%    | 48 MB         |
-| 50M    | 137.56 s / 60.51 MB / 309%    | 97.81 s / 146.73 MB / 256%   | 94.24 s / 78.71 MB / 145%    | 237 MB        |
-| 100M   | 271.98 s / 57.01 MB / 312%    | 202.21 s / 270.82 MB / 256%  | 192.70 s / 138.55 MB / 146%  | 473 MB        |
+| Files  | CREATE (Time / RAM / CPU)    | DIFF (Time / RAM / CPU)      | LIST (Time / RAM / CPU)      | Treeball Size |
+|--------|------------------------------|------------------------------|------------------------------|---------------|
+| 10K    | 0.04 s / 26.63 MB / 200%     | 0.04 s / 14.73 MB / 175%     | 0.03 s / 13.02 MB / 100%     | 49 KB         |
+| 500K   | 0.95 s / 56.55 MB / 425%     | 1.05 s / 83.87 MB / 255%     | 0.95 s / 44.42 MB / 148%     | 2.4 MB        |
+| **1M** | **1.94 s / 57.23 MB / 422%** | **1.97 s / 81.84 MB / 253%** | **1.87 s / 43.13 MB / 151%** | **4.8 MB**    |
+| 5M     | 12.99 s / 62.99 MB / 317%    | 9.97 s / 82.31 MB / 252%     | 9.32 s / 47.24 MB / 151%     | 24 MB         |
+| 10M    | 29.78 s / 58.88 MB / 277%    | 19.37 s / 84.13 MB / 260%    | 18.80 s / 45.23 MB / 150%    | 48 MB         |
 
 > CPU usage above 100% indicates that the program is **multi-threaded** and effectively parallelized.  
 > RAM usage per million files drops significantly with scale due to **external sorting** and streaming data.  
+> Additional [stress tests](./PERFORMANCE.md) with trees **up to 400M files** have shown continued low resource consumption.  
 
 **Benchmark Environment**:  
 Average path length: ~80 characters / Maximum directory depth: 5 levels  

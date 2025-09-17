@@ -163,7 +163,7 @@ func Test_writeDummyFile_WriteHeader_Error(t *testing.T) {
 }
 
 // Expecation: The channels should contain the correct ordered paths and no errors.
-func Test_tarPathStream_Sorted_Success(t *testing.T) {
+func Test_Program_tarPathStream_Sorted_Success(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
 	tarData := createTar([]string{"z.txt", "b/", "b/c.txt"})
@@ -185,7 +185,7 @@ func Test_tarPathStream_Sorted_Success(t *testing.T) {
 }
 
 // Expecation: The channels should contain the correct ordered paths and no errors.
-func Test_tarPathStream_Unsorted_Success(t *testing.T) {
+func Test_Program_tarPathStream_Unsorted_Success(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
 	tarData := createTar([]string{"z.txt", "b/", "b/c.txt"})
@@ -207,7 +207,7 @@ func Test_tarPathStream_Unsorted_Success(t *testing.T) {
 }
 
 // Expecation: The channels should contain the correct error and no paths.
-func Test_tarPathStream_Open_Error(t *testing.T) {
+func Test_Program_tarPathStream_Open_Error(t *testing.T) {
 	baseFs := afero.NewMemMapFs()
 
 	require.NoError(t, afero.WriteFile(baseFs, "/archive.tar.gz", []byte("test"), 0o644))
@@ -231,7 +231,7 @@ func Test_tarPathStream_Open_Error(t *testing.T) {
 }
 
 // Expecation: The channels should contain the correct error and no paths.
-func Test_tarPathStream_GzipDecode_Error(t *testing.T) {
+func Test_Program_tarPathStream_GzipDecode_Error(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
 	require.NoError(t, afero.WriteFile(fs, "/archive.tar.gz", []byte("not a gzip file"), 0o644))
@@ -253,7 +253,7 @@ func Test_tarPathStream_GzipDecode_Error(t *testing.T) {
 }
 
 // Expecation: The channels should contain the correct error and no paths.
-func Test_tarPathStream_TarDecode_Error(t *testing.T) {
+func Test_Program_tarPathStream_TarDecode_Error(t *testing.T) {
 	var buf bytes.Buffer
 	gz := gzip.NewWriter(&buf)
 
