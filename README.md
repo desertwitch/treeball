@@ -50,7 +50,7 @@ Directory trees are reshaped as artifacts - something you can archive, compare, 
 - **List** the contents of a tree tarball (sorted or original order)
 
 #### Operational strengths:
-- Works efficiently even with **millions of files** (tested up to **50M+**)
+- Works efficiently even with **millions of files** (with [benchmarks](#benchmarks))
 - Streams data and uses external sorting for a **low resource profile**
 - Clear, **scriptable output** via `stdout` / `stderr` (no useless chatter)
 - Fully **tested** (including exclusion logic, signal handling, edge cases)
@@ -183,41 +183,25 @@ make
 
 ### BENCHMARKS
 
-#### Environment A - Low-Performance VM:
-i7-10710U 1.10GHz (VM: 2 cores), 2GB RAM, 970 EVO Plus NVMe (EXT4), Ubuntu 24.04.3  
-Average path length: ~80 characters / Maximum directory depth: 5 levels / with `--tmpdir`  
+The benchmarks demonstrate performance across small to massive directory trees.
 
-| Files | CREATE (Time / RAM / CPU) | DIFF (Time / RAM / CPU)    | LIST (Time / RAM / CPU)   | Treeball Size |
-|-------|---------------------------|----------------------------|---------------------------|---------------|
-| 5K    | 0.05 s / 10.6 MB / 120%   | 0.05 s / 16.6 MB / 140%    | 0.04 s / 9.9 MB / 100%    | 25 KB         |
-| 10K   | 0.09 s / 14.5 MB / 167%   | 0.08 s / 18.5 MB / 175%    | 0.07 s / 11.3 MB / 100%   | 49 KB         |
-| 50K   | 0.34 s / 28.4 MB / 188%   | 0.21 s / 26.2 MB / 186%    | 0.24 s / 15.9 MB / 113%   | 242 KB        |
-| 100K  | 0.67 s / 34.9 MB / 194%   | 0.47 s / 57.8 MB / 177%    | 0.56 s / 29.8 MB / 123%   | 483 KB        |
-| 500K  | 3.42 s / 40.7 MB / 189%   | 2.09 s / 85.1 MB / 190%    | 2.31 s / 40.3 MB / 125%   | 2.4 MB        |
-| 1M    | 7.48 s / 41.3 MB / 190%   | 4.58 s / 80.4 MB / 193%    | 4.66 s / 39.6 MB / 127%   | 4.8 MB        |
-| 5M    | 39.23 s / 42.4 MB / 185%  | 22.19 s / 75.8 MB / 195%   | 22.99 s / 39.6 MB / 128%  | 24 MB         |
-| 10M   | 77.21 s / 42.8 MB / 185%  | 45.39 s / 78.8 MB / 194%   | 45.45 s / 39.4 MB / 128%  | 48 MB         |
-| 25M   | 194.08 s / 43.0 MB / 184% | 113.89 s / 80.4 MB / 193%  | 115.03 s / 40.6 MB / 128% | 119 MB        |
-| 50M   | 388.17 s / 42.9 MB / 184% | 227.51 s / 136.7 MB / 193% | 231.13 s / 71.3 MB / 128% | 237 MB        |
-
-#### Environment B - High-Performance VM:
-i5-12600K 3.69 GHz (VM: 16 cores), 32GB RAM, 980 Pro NVMe (EXT4), Ubuntu 24.04.2  
-Average path length: ~80 characters / Maximum directory depth: 5 levels / with `--tmpdir`  
-
-| Files | CREATE (Time / RAM / CPU)  | DIFF (Time / RAM / CPU)    | LIST (Time / RAM / CPU)   | Treeball Size |
-|-------|----------------------------|----------------------------|---------------------------|---------------|
-| 5K    | 0.03 s / 21.38 MB / 100%   | 0.02 s / 17.23 MB / 150%   | 0.02 s / 10.93 MB / 100%  | 25 KB         |
-| 10K   | 0.04 s / 26.63 MB / 200%   | 0.04 s / 14.73 MB / 175%   | 0.03 s / 13.02 MB / 100%  | 49 KB         |
-| 50K   | 0.12 s / 43.55 MB / 342%   | 0.11 s / 24.84 MB / 200%   | 0.10 s / 19.25 MB / 120%  | 242 KB        |
-| 100K  | 0.22 s / 52.78 MB / 373%   | 0.24 s / 52.11 MB / 217%   | 0.21 s / 32.43 MB / 133%  | 483 KB        |
-| 500K  | 0.95 s / 55.22 MB / 425%   | 1.05 s / 81.90 MB / 255%   | 0.95 s / 43.38 MB / 148%  | 2.4 MB        |
-| 1M    | 1.94 s / 57.23 MB / 422%   | 1.97 s / 81.84 MB / 253%   | 1.87 s / 43.13 MB / 151%  | 4.8 MB        |
-| 5M    | 12.99 s / 62.99 MB / 317%  | 9.97 s / 82.31 MB / 252%   | 9.32 s / 47.24 MB / 151%  | 24 MB         |
-| 10M   | 29.78 s / 58.88 MB / 277%  | 19.37 s / 84.13 MB / 260%  | 18.80 s / 45.23 MB / 150% | 48 MB         |
-| 25M   | 87.34 s / 58.86 MB / 240%  | 47.95 s / 92.37 MB / 268%  | 46.10 s / 44.89 MB / 152% | 119 MB        |
-| 50M   | 172.75 s / 61.81 MB / 241% | 99.35 s / 142.35 MB / 265% | 92.54 s / 74.84 MB / 152% | 237 MB        |
+| Files  | CREATE (Time / RAM / CPU)     | DIFF (Time / RAM / CPU)      | LIST (Time / RAM / CPU)      | Treeball Size |
+|--------|-------------------------------|------------------------------|------------------------------|---------------|
+| 10K    | 0.04 s / 26.63 MB / 200%      | 0.04 s / 14.73 MB / 175%     | 0.03 s / 13.02 MB / 100%     | 49 KB         |
+| 500K   | 0.95 s / 56.55 MB / 425%      | 1.05 s / 83.87 MB / 255%     | 0.95 s / 44.42 MB / 148%     | 2.4 MB        |
+| 1M     | 1.94 s / 57.23 MB / 422%      | 1.97 s / 81.84 MB / 253%     | 1.87 s / 43.13 MB / 151%     | 4.8 MB        |
+| **5M** | **12.99 s / 62.99 MB / 317%** | **9.97 s / 82.31 MB / 252%** | **9.32 s / 47.24 MB / 151%** | **24 MB**     |
+| 10M    | 29.78 s / 58.88 MB / 277%     | 19.37 s / 84.13 MB / 260%    | 18.80 s / 45.23 MB / 150%    | 48 MB         |
+| 50M    | 137.56 s / 60.51 MB / 309%    | 97.81 s / 146.73 MB / 256%   | 94.24 s / 78.71 MB / 145%    | 237 MB        |
+| 100M   | 271.98 s / 57.01 MB / 312%    | 202.21 s / 270.82 MB / 256%  | 192.70 s / 138.55 MB / 146%  | 473 MB        |
 
 > CPU usage above 100% indicates that the program is **multi-threaded** and effectively parallelized.  
+> RAM usage per million files drops significantly with scale due to **external sorting** and streaming data.  
+
+**Benchmark Environment**:  
+Average path length: ~80 characters / Maximum directory depth: 5 levels  
+Default settings / `--tmpdir` (on same disk) / Maximum compression level (9)  
+i5-12600K 3.69 GHz (16 cores), 32GB RAM, 980 Pro NVMe (EXT4), Ubuntu 24.04.2  
 
 ### SECURITY, CONTRIBUTIONS, AND LICENSE
 
