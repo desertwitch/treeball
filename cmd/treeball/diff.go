@@ -11,17 +11,24 @@ import (
 	"github.com/lanrat/extsort/diff"
 )
 
-// Diff produces a tarball containing the differences between two given
-// tarballs. Any encountered files are replaced with zero-byte empty dummies.
+// Diff compares the contents of two sources (directories or tarballs) and
+// produces a synthetic tarball representing only the differences between them.
 //
-// The cmpOld parameter is the path to the original tarball, and cmpNew is the
-// path to the new tarball. The output parameter specifies the path of the
-// resulting diff tarball, which contains synthetic folders marking added and
-// removed paths (+++ and ---). The ctx parameter controls early cancellation.
+// The input paths cmpOld and cmpNew can each be either a tarball (*.tar.gz) or
+// a directory. The produced diff tarball has the following internal structure:
+//   - Added paths are placed under a synthetic "+++" directory.
+//   - Removed paths are placed under a synthetic "---" directory.
 //
-// If differences are found, Diff returns a non-nil *diff.Result along with
-// ErrDiffsFound. If no differences are found, the output file is removed before
-// returning. Any other returned error indicates a generic failure (I/O, sorting, etc).
+// Each differing file or folder is represented as a dummy entry to avoid
+// including real file contents. Any paths matching the excludes slice are
+// skipped on both sides of the input and for resulting diff-consideration.
+//
+// This function returns:
+//   - (*diff.Result, ErrDiffsFound): if any differences are found
+//   - (*diff.Result, nil): if the sources are identical (no output file)
+//   - (nil, error): for any other failure (I/O, gzip, comparison error, etc.)
+//
+// The ctx parameter controls early cancellation.
 func (prog *Program) Diff(ctx context.Context, cmpOld string, cmpNew string, output string, excludes []string) (*diff.Result, error) { //nolint:unparam
 	var hasDifferences bool
 	var oldStream, newStream <-chan string

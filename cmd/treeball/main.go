@@ -10,7 +10,7 @@ The program works efficiently even with millions of files, intelligently off-loa
 disk when system resources would otherwise become too constrained. It supports these commands:
 
 	create - build a tarball from a given directory tree
-	diff   - generate a diff tarball containing only the changes between two tarballs
+	diff   - generate a diff tarball containing only the changes between two sources
 	list   - produce a sorted or unsorted listing of all the contents of a given tarball
 
 All commands print their primary results (such as file paths or differences) to standard output
@@ -171,7 +171,7 @@ func newCreateCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.
 
 			excl, err := prog.mergeExcludes(excludes, excludesFile)
 			if err != nil {
-				return fmt.Errorf("failed to merge exclude arguments: %w", err)
+				return fmt.Errorf("failed to evaluate exclude arguments: %w", err)
 			}
 
 			return prog.Create(ctx, args[0], args[1], excl)
@@ -195,7 +195,7 @@ func newDiffCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Wr
 	compressorConfig := gzipConfigDefault
 
 	diffCmd := &cobra.Command{
-		Use:     "diff <old.tar.gz> <new.tar.gz> <diff.tar.gz>",
+		Use:     "diff <old> <new> <diff.tar.gz>",
 		Short:   diffHelpShort,
 		Long:    diffHelpLong,
 		Example: diffExample,
@@ -205,7 +205,7 @@ func newDiffCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Wr
 
 			excl, err := prog.mergeExcludes(excludes, excludesFile)
 			if err != nil {
-				return fmt.Errorf("failed to normalize exclude arguments: %w", err)
+				return fmt.Errorf("failed to evaluate exclude arguments: %w", err)
 			}
 
 			_, err = prog.Diff(ctx, args[0], args[1], args[2], excl)

@@ -101,7 +101,7 @@ func isExcluded(path string, isDir bool, excludes []string) (bool, error) {
 }
 
 func (prog *Program) mergeExcludes(excludeSlice []string, excludeFile string) ([]string, error) {
-	var excludes []string
+	excludes := []string{}
 
 	if excludeFile != "" {
 		file, err := prog.fs.Open(excludeFile)

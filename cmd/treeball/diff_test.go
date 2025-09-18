@@ -31,6 +31,54 @@ func createTar(entries []string) []byte {
 	return buf.Bytes()
 }
 
+// Expectation: An error should be thrown when the old path is not existent.
+func Test_Program_Diff_OldPathMissing_Stat_Error(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	require.NoError(t, afero.WriteFile(fs, "/old.tar.gz", createTar([]string{"a.txt", "b/", "b/x.txt"}), 0o644))
+	require.NoError(t, afero.WriteFile(fs, "/new.tar.gz", createTar([]string{"a.txt", "b/", "b/x.txt"}), 0o644))
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	_, err := prog.Diff(t.Context(), "/old1.tar.gz", "/new.tar.gz", "/diff.tar.gz", nil)
+
+	require.Error(t, err)
+	require.ErrorContains(t, err, "stat")
+
+	_, err = fs.Stat("/diff.tar.gz")
+	require.ErrorIs(t, err, os.ErrNotExist)
+}
+
+// Expectation: An error should be thrown when the old path is not existent.
+func Test_Program_Diff_NewPathMissing_Stat_Error(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	require.NoError(t, afero.WriteFile(fs, "/old.tar.gz", createTar([]string{"a.txt", "b/", "b/x.txt"}), 0o644))
+	require.NoError(t, afero.WriteFile(fs, "/new.tar.gz", createTar([]string{"a.txt", "b/", "b/x.txt"}), 0o644))
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	_, err := prog.Diff(t.Context(), "/old.tar.gz", "/new1.tar.gz", "/diff.tar.gz", nil)
+
+	require.Error(t, err)
+	require.ErrorContains(t, err, "stat")
+
+	_, err = fs.Stat("/diff.tar.gz")
+	require.ErrorIs(t, err, os.ErrNotExist)
+}
+
+// Expectation: An invalid exclude pattern should produce an error.
+func Test_Program_Diff_InvalidExcludePattern_Error(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	require.NoError(t, afero.WriteFile(fs, "/old.tar.gz", createTar([]string{"a.txt", "b/", "b/x.txt"}), 0o644))
+	require.NoError(t, afero.WriteFile(fs, "/new.tar.gz", createTar([]string{"a.txt", "b/", "b/y.txt"}), 0o644))
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	_, err := prog.Diff(t.Context(), "/old.tar.gz", "/new.tar.gz", "/diff.tar.gz", []string{"a["})
+
+	require.Error(t, err)
+	require.ErrorContains(t, err, "exclude")
+}
+
 // Expectation: A difference between the tarballs should be found, the correct error returned and the output file exist.
 func Test_Program_Diff_TarVsTar_DiffsFound_Success(t *testing.T) {
 	fs := afero.NewMemMapFs()

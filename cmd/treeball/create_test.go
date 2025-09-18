@@ -136,6 +136,20 @@ func Test_Program_Create_WithFileExcludes_Success(t *testing.T) {
 	require.Equal(t, []string{"a.txt", "b/"}, names)
 }
 
+// Expectation: An invalid exclude pattern should produce an error.
+func Test_Program_Create_InvalidExcludePattern_Error(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	require.NoError(t, afero.WriteFile(fs, "/src/a.txt", []byte("a"), 0o644))
+	require.NoError(t, afero.WriteFile(fs, "/src/b/c.txt", []byte("c"), 0o644))
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	err := prog.Create(t.Context(), "/src", "/out.tar.gz", []string{"b["})
+
+	require.Error(t, err)
+	require.ErrorContains(t, err, "exclude")
+}
+
 // Expectation: A context cancellation should be respected and the output file removed.
 func Test_Program_Create_CtxCancel_Error(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())

@@ -14,7 +14,7 @@ The program works efficiently even with millions of files, intelligently off-loa
 disk when system resources would otherwise become too constrained. It supports these commands:
 
   create - build a tarball from a given directory tree
-  diff   - generate a diff tarball containing only the changes between two tarballs
+  diff   - generate a diff tarball containing only the changes between two sources
   list   - produce a sorted or unsorted listing of all the contents of a given tarball
 
 All commands print their primary results (such as file paths or differences) to standard output
@@ -49,13 +49,15 @@ treeball create . output.tar.gz
 # Create a tarball excluding specific directories:
 treeball create /mnt/user user.tar.gz --exclude=/mnt/user/appdata --exclude=/mnt/user/cache`
 
-	diffHelpShort = "Create a diff tarball from any two pre-existing tarballs"
+	diffHelpShort = "Create a diff tarball from any two pre-existing sources"
 
-	diffHelpLong = `Create a diff tarball containing only the differences between any two pre-existing tarballs.
+	diffHelpLong = `Create a diff tarball containing only the differences between any two pre-existing sources.
 
-The command will compare the content of two existing (directory tree) tarballs and produce
-a "diff" tarball reflecting any additions or removals, comparing the "old" and "new" tarball.
+The command will compare the content of two existing (directory tree) sources and produce
+a "diff" tarball reflecting any additions or removals, comparing the "old" and "new" inputs.
 This helps to identify which files were recently added or lost (e.g., for recovery scenarios).
+
+The command supports sources as either an existing directory or an existing tarball (.tar.gz).
 
 Any differences will also be written to standard output (stdout), while any other operational
 output will be written to standard error (stderr). The program will return with an exit code
@@ -70,6 +72,9 @@ choose one for you, falling back to the system's default temporary file location
 	diffExample = `
 # Basic usage of the command:
 treeball diff old.tar.gz new.tar.gz diff.tar.gz
+
+# Basic usage of the command with directory comparison:
+treeball diff old.tar.gz /mnt/new diff.tar.gz
 
 # Use of a specific on-disk temporary location for large tarballs:
 treeball diff old.tar.gz new.tar.gz diff.tar.gz --tmpdir=/mnt/largedisk
