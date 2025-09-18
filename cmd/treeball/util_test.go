@@ -326,10 +326,14 @@ func Test_isExcluded_Table(t *testing.T) {
 		{"Doublestar matches dot prefix", "a/.hidden/file", false, []string{"a/**"}, true},
 
 		// === Edge cases with slashes ===
-		{"Leading slash stripped", "vendor/lib.go", false, []string{"/vendor/**"}, true},
-		{"Leading slash stripped", "sub/foo/bar", false, []string{"/foo/bar"}, false},
 		{"Pattern with internal double slash", "a/b/c", false, []string{"a//b/c"}, false},
 		{"Empty path component in pattern", "a/c", false, []string{"a//c"}, false},
+		{"Sub-path", "sub/foo/bar", true, []string{"foo/bar"}, false},
+		{"Non-sub-path dir", "foo/bar", true, []string{"foo/bar"}, true},
+		{"Non-sub-path file", "foo/bar", false, []string{"foo/bar"}, true},
+		{"Leading slash stripped dir", "sub/foo/bar", true, []string{"/foo/bar"}, false},
+		{"Leading slash stripped file", "sub/foo/bar", false, []string{"/foo/bar"}, false},
+		{"Leading slash stripped", "vendor/lib.go", false, []string{"/vendor/**"}, true},
 
 		// === Complex real-world patterns ===
 		{"node_modules anywhere", "project/node_modules/pkg/index.js", false, []string{"**/node_modules/**"}, true},
