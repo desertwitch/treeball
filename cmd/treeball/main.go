@@ -46,6 +46,7 @@ const (
 	baseFolderPerms = 0o777
 
 	tarStreamBuffer = 1000
+	fsStreamBuffer  = 1000
 
 	exitTimeout        = 10 * time.Second
 	exitCodeSuccess    = 0
@@ -132,8 +133,6 @@ func NewProgram(fs afero.Fs, stdout io.Writer, stderr io.Writer, gzipConfig *Gzi
 }
 
 func newRootCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Writer) *cobra.Command {
-	var createExcludes []string
-
 	rootCmd := &cobra.Command{
 		Use:               "treeball",
 		Short:             rootHelpShort,
@@ -146,7 +145,21 @@ func newRootCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Wr
 	rootCmd.SetOut(stdout)
 	rootCmd.SetErr(stderr)
 
-	createCompressorConfig := gzipConfigDefault
+	createCmd := newCreateCmd(ctx, fs, stdout, stderr)
+	diffCmd := newDiffCmd(ctx, fs, stdout, stderr)
+	listCmd := newListCmd(ctx, fs, stdout, stderr)
+
+	rootCmd.AddCommand(createCmd, diffCmd, listCmd)
+
+	return rootCmd
+}
+
+func newCreateCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Writer) *cobra.Command {
+	var excludes []string
+	var excludesFile string
+
+	compressorConfig := gzipConfigDefault
+
 	createCmd := &cobra.Command{
 		Use:     "create <root-folder> <output.tar.gz>",
 		Short:   createHelpShort,
@@ -154,18 +167,33 @@ func newRootCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Wr
 		Example: createExample,
 		Args:    cobra.ExactArgs(2), //nolint:mnd
 		RunE: func(_ *cobra.Command, args []string) error {
-			prog := NewProgram(fs, stdout, stderr, &createCompressorConfig, nil)
+			prog := NewProgram(fs, stdout, stderr, &compressorConfig, nil)
 
-			return prog.Create(ctx, args[0], args[1], createExcludes)
+			excl, err := prog.mergeExcludes(excludes, excludesFile)
+			if err != nil {
+				return fmt.Errorf("failed to normalize exclude arguments: %w", err)
+			}
+
+			return prog.Create(ctx, args[0], args[1], excl)
 		},
 	}
-	createCmd.Flags().StringArrayVar(&createExcludes, "exclude", nil, "path to exclude; can be repeated multiple times")
-	createCmd.Flags().IntVar(&createCompressorConfig.CompressionLevel, "compression", gzipConfigDefault.CompressionLevel, "level of compression (0: none - 9: highest)")
-	createCmd.Flags().IntVar(&createCompressorConfig.BlockSize, "blocksize", gzipConfigDefault.BlockSize, "block size for compressing")
-	createCmd.Flags().IntVar(&createCompressorConfig.BlockCount, "blockcount", gzipConfigDefault.BlockCount, "blocks to compress in parallel")
 
-	diffSorterConfig := extSortConfigDefault
-	diffCompressorConfig := gzipConfigDefault
+	createCmd.Flags().StringArrayVar(&excludes, "exclude", nil, "pattern to exclude; can be repeated multiple times")
+	createCmd.Flags().StringVar(&excludesFile, "excludes-from", "", "path to a file containing exclusion patterns")
+	createCmd.Flags().IntVar(&compressorConfig.CompressionLevel, "compression", gzipConfigDefault.CompressionLevel, "level of compression (0: none - 9: highest)")
+	createCmd.Flags().IntVar(&compressorConfig.BlockSize, "blocksize", gzipConfigDefault.BlockSize, "block size for compressing")
+	createCmd.Flags().IntVar(&compressorConfig.BlockCount, "blockcount", gzipConfigDefault.BlockCount, "blocks to compress in parallel")
+
+	return createCmd
+}
+
+func newDiffCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Writer) *cobra.Command {
+	var excludes []string
+	var excludesFile string
+
+	sorterConfig := extSortConfigDefault
+	compressorConfig := gzipConfigDefault
+
 	diffCmd := &cobra.Command{
 		Use:     "diff <old.tar.gz> <new.tar.gz> <diff.tar.gz>",
 		Short:   diffHelpShort,
@@ -173,19 +201,33 @@ func newRootCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Wr
 		Example: diffExample,
 		Args:    cobra.ExactArgs(3), //nolint:mnd
 		RunE: func(_ *cobra.Command, args []string) error {
-			prog := NewProgram(fs, stdout, stderr, &diffCompressorConfig, &diffSorterConfig)
-			_, err := prog.Diff(ctx, args[0], args[1], args[2])
+			prog := NewProgram(fs, stdout, stderr, &compressorConfig, &sorterConfig)
+
+			excl, err := prog.mergeExcludes(excludes, excludesFile)
+			if err != nil {
+				return fmt.Errorf("failed to normalize exclude arguments: %w", err)
+			}
+
+			_, err = prog.Diff(ctx, args[0], args[1], args[2], excl)
 
 			return err
 		},
 	}
-	diffCmd.Flags().StringVar(&diffSorterConfig.TempFilesDir, "tmpdir", extSortConfigDefault.TempFilesDir, "on-disk location for intermediate files")
-	diffCmd.Flags().IntVar(&diffCompressorConfig.CompressionLevel, "compression", gzipConfigDefault.CompressionLevel, "level of compression (0: none - 9: highest)")
-	diffCmd.Flags().IntVar(&diffSorterConfig.NumWorkers, "workers", extSortConfigDefault.NumWorkers, "workers for concurrent operations")
-	diffCmd.Flags().IntVar(&diffSorterConfig.ChunkSize, "chunksize", extSortConfigDefault.ChunkSize, "max records per worker before spilling to disk")
 
-	listSort := true
-	listSorterConfig := extSortConfigDefault
+	diffCmd.Flags().StringArrayVar(&excludes, "exclude", nil, "pattern to exclude; can be repeated multiple times")
+	diffCmd.Flags().StringVar(&excludesFile, "excludes-from", "", "path to a file containing exclusion patterns")
+	diffCmd.Flags().StringVar(&sorterConfig.TempFilesDir, "tmpdir", extSortConfigDefault.TempFilesDir, "on-disk location for intermediate files")
+	diffCmd.Flags().IntVar(&compressorConfig.CompressionLevel, "compression", gzipConfigDefault.CompressionLevel, "level of compression (0: none - 9: highest)")
+	diffCmd.Flags().IntVar(&sorterConfig.NumWorkers, "workers", extSortConfigDefault.NumWorkers, "workers for concurrent operations")
+	diffCmd.Flags().IntVar(&sorterConfig.ChunkSize, "chunksize", extSortConfigDefault.ChunkSize, "max records per worker before spilling to disk")
+
+	return diffCmd
+}
+
+func newListCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Writer) *cobra.Command {
+	sort := true
+	sorterConfig := extSortConfigDefault
+
 	listCmd := &cobra.Command{
 		Use:     "list <input.tar.gz>",
 		Short:   listHelpShort,
@@ -193,19 +235,18 @@ func newRootCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Wr
 		Example: listExample,
 		Args:    cobra.ExactArgs(1),
 		RunE: func(_ *cobra.Command, args []string) error {
-			prog := NewProgram(fs, stdout, stderr, nil, &listSorterConfig)
+			prog := NewProgram(fs, stdout, stderr, nil, &sorterConfig)
 
-			return prog.List(ctx, args[0], listSort)
+			return prog.List(ctx, args[0], sort)
 		},
 	}
-	listCmd.Flags().BoolVar(&listSort, "sort", true, "sort the output list; for better comparability")
-	listCmd.Flags().StringVar(&listSorterConfig.TempFilesDir, "tmpdir", extSortConfigDefault.TempFilesDir, "on-disk location for intermediate files")
-	listCmd.Flags().IntVar(&listSorterConfig.NumWorkers, "workers", extSortConfigDefault.NumWorkers, "workers for concurrent operations")
-	listCmd.Flags().IntVar(&listSorterConfig.ChunkSize, "chunksize", extSortConfigDefault.ChunkSize, "max records per worker before spilling to disk")
 
-	rootCmd.AddCommand(createCmd, diffCmd, listCmd)
+	listCmd.Flags().BoolVar(&sort, "sort", true, "sort the output list; for better comparability")
+	listCmd.Flags().StringVar(&sorterConfig.TempFilesDir, "tmpdir", extSortConfigDefault.TempFilesDir, "on-disk location for intermediate files")
+	listCmd.Flags().IntVar(&sorterConfig.NumWorkers, "workers", extSortConfigDefault.NumWorkers, "workers for concurrent operations")
+	listCmd.Flags().IntVar(&sorterConfig.ChunkSize, "chunksize", extSortConfigDefault.ChunkSize, "max records per worker before spilling to disk")
 
-	return rootCmd
+	return listCmd
 }
 
 func main() {

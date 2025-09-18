@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/tar"
+	"bufio"
 	"compress/gzip"
 	"context"
 	"errors"
@@ -12,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bmatcuk/doublestar/v4"
 	"github.com/lanrat/extsort"
 	"github.com/spf13/afero"
 )
@@ -73,19 +75,52 @@ func (fi fileInfoDirEntry) Name() string {
 	return fi.FileInfo.Name()
 }
 
-func isExcluded(path string, excludes []string) bool {
-	path = filepath.Clean(strings.TrimSpace(path))
+func isExcluded(path string, excludes []string) (bool, error) {
+	path = filepath.ToSlash(filepath.Clean(path))
 
-	for _, excl := range excludes {
-		if path == excl {
-			return true
+	for _, pattern := range excludes {
+		matched, err := doublestar.Match(filepath.ToSlash(pattern), path)
+		if err != nil {
+			return false, err
 		}
-		if rel, err := filepath.Rel(excl, path); err == nil && !strings.HasPrefix(rel, "..") {
-			return true
+		if matched {
+			return true, nil
 		}
 	}
 
-	return false
+	return false, nil
+}
+
+func (prog *Program) mergeExcludes(excludeSlice []string, excludeFile string) ([]string, error) {
+	var excludes []string
+
+	if excludeFile != "" {
+		file, err := prog.fs.Open(excludeFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to open exclude file: %w", err)
+		}
+		defer file.Close()
+
+		scanner := bufio.NewScanner(file)
+
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+
+			if line == "" || strings.HasPrefix(line, "#") {
+				continue
+			}
+
+			excludes = append(excludes, line)
+		}
+
+		if err := scanner.Err(); err != nil {
+			return nil, fmt.Errorf("error reading exclude file: %w", err)
+		}
+	}
+
+	excludes = append(excludes, excludeSlice...)
+
+	return excludes, nil
 }
 
 func writeDummyFile(tw *tar.Writer, name string, isDir bool) error {
@@ -117,7 +152,78 @@ func writeDummyFile(tw *tar.Writer, name string, isDir bool) error {
 	return nil
 }
 
-func (prog *Program) tarPathStream(ctx context.Context, path string, sort bool) (<-chan string, <-chan error) {
+func (prog *Program) multiPathStream(ctx context.Context, path string, sort bool, excludes []string) (<-chan string, <-chan error, error) {
+	info, err := prog.fs.Stat(path)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to stat: %w", err)
+	}
+
+	if info.IsDir() {
+		paths, errs := prog.fsPathStream(ctx, path, sort, excludes)
+
+		return paths, errs, nil
+	} else {
+		paths, errs := prog.tarPathStream(ctx, path, sort, excludes)
+
+		return paths, errs, nil
+	}
+}
+
+func (prog *Program) fsPathStream(ctx context.Context, path string, sort bool, excludes []string) (<-chan string, <-chan error) {
+	paths := make(chan string, fsStreamBuffer)
+	errs := make(chan error, 1)
+
+	go func() {
+		defer close(paths)
+		defer close(errs)
+
+		if err := prog.fsWalker.WalkDir(path, func(p string, d fs.DirEntry, err error) error {
+			if err := ctx.Err(); err != nil {
+				return ctx.Err()
+			}
+
+			if err != nil {
+				return fmt.Errorf("failed to walk filesystem: %w", err)
+			}
+
+			if p == path {
+				return nil
+			}
+
+			relPath, err := filepath.Rel(path, p)
+			if err != nil {
+				return fmt.Errorf("failed to obtain relative path: %w", err)
+			}
+
+			if excluded, err := isExcluded(relPath, excludes); err != nil {
+				return fmt.Errorf("invalid exclude pattern: %w", err)
+			} else if excluded && d.IsDir() {
+				return filepath.SkipDir
+			} else if excluded {
+				return nil
+			}
+
+			relPath = filepath.ToSlash(relPath)
+			if d.IsDir() && !strings.HasSuffix(relPath, "/") {
+				relPath += "/"
+			}
+
+			paths <- relPath
+
+			return nil
+		}); err != nil {
+			errs <- fmt.Errorf("failed to stream from fs: %w", err)
+		}
+	}()
+
+	if !sort {
+		return paths, errs
+	}
+
+	return extsortStrings(ctx, paths, errs, prog.extSortConfig)
+}
+
+func (prog *Program) tarPathStream(ctx context.Context, path string, sort bool, excludes []string) (<-chan string, <-chan error) {
 	paths := make(chan string, tarStreamBuffer)
 	errs := make(chan error, 1)
 
@@ -160,7 +266,13 @@ func (prog *Program) tarPathStream(ctx context.Context, path string, sort bool) 
 				break // EOF
 			}
 
-			paths <- hdr.Name
+			if excluded, err := isExcluded(hdr.Name, excludes); err != nil {
+				errs <- fmt.Errorf("invalid exclude pattern: %w", err)
+
+				return
+			} else if !excluded {
+				paths <- hdr.Name
+			}
 		}
 	}()
 

@@ -39,7 +39,7 @@ func Test_Program_Diff_DiffsFound_Success(t *testing.T) {
 	require.NoError(t, afero.WriteFile(fs, "/new.tar.gz", createTar([]string{"a.txt", "b/", "b/y.txt"}), 0o644))
 
 	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
-	_, err := prog.Diff(t.Context(), "/old.tar.gz", "/new.tar.gz", "/diff.tar.gz")
+	_, err := prog.Diff(t.Context(), "/old.tar.gz", "/new.tar.gz", "/diff.tar.gz", nil)
 	require.ErrorIs(t, err, ErrDiffsFound)
 
 	f, err := fs.Open("/diff.tar.gz")
@@ -73,7 +73,7 @@ func Test_Program_Diff_NoDiffsFound_Success(t *testing.T) {
 	require.NoError(t, afero.WriteFile(fs, "/new.tar.gz", createTar([]string{"a.txt", "b/", "b/x.txt"}), 0o644))
 
 	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
-	_, err := prog.Diff(t.Context(), "/old.tar.gz", "/new.tar.gz", "/diff.tar.gz")
+	_, err := prog.Diff(t.Context(), "/old.tar.gz", "/new.tar.gz", "/diff.tar.gz", nil)
 	require.NoError(t, err)
 
 	_, err = fs.Stat("/diff.tar.gz")
@@ -91,7 +91,7 @@ func Test_Program_Diff_CtxCancel_Error(t *testing.T) {
 	require.NoError(t, afero.WriteFile(fs, "/new.tar.gz", createTar([]string{"a.txt", "b.txt"}), 0o644))
 
 	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
-	_, err := prog.Diff(ctx, "/old.tar.gz", "/new.tar.gz", "/diff.tar.gz")
+	_, err := prog.Diff(ctx, "/old.tar.gz", "/new.tar.gz", "/diff.tar.gz", nil)
 	require.ErrorIs(t, err, context.Canceled)
 
 	_, err = fs.Stat("/diff.tar.gz")
@@ -108,7 +108,7 @@ func Test_Program_Diff_CreateFile_Error(t *testing.T) {
 	fs := errorFs{Fs: baseFs}
 	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
 
-	_, err := prog.Diff(t.Context(), "/old.tar.gz", "/new.tar.gz", "/diff.tar.gz")
+	_, err := prog.Diff(t.Context(), "/old.tar.gz", "/new.tar.gz", "/diff.tar.gz", nil)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "simulated create failure")
 
@@ -127,7 +127,7 @@ func Test_Program_Diff_InvalidConfig_Error(t *testing.T) {
 	cfg.CompressionLevel = -17
 
 	prog := NewProgram(fs, io.Discard, io.Discard, &cfg, nil)
-	_, err := prog.Diff(t.Context(), "/old.tar.gz", "/new.tar.gz", "/diff.tar.gz")
+	_, err := prog.Diff(t.Context(), "/old.tar.gz", "/new.tar.gz", "/diff.tar.gz", nil)
 	require.Error(t, err)
 
 	_, err = fs.Stat("/diff.tar.gz")

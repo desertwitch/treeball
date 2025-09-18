@@ -78,7 +78,7 @@ func Test_Program_Create_WithExcludes_Success(t *testing.T) {
 	require.NoError(t, afero.WriteFile(fs, "/src/b/c.txt", []byte("c"), 0o644))
 
 	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
-	require.NoError(t, prog.Create(t.Context(), "/src", "/out.tar.gz", []string{"/src/b"}))
+	require.NoError(t, prog.Create(t.Context(), "/src", "/out.tar.gz", []string{"b"}))
 
 	f, err := fs.Open("/out.tar.gz")
 	require.NoError(t, err)
@@ -111,7 +111,7 @@ func Test_Program_Create_WithFileExcludes_Success(t *testing.T) {
 	require.NoError(t, afero.WriteFile(fs, "/src/b/c.txt", []byte("c"), 0o644))
 
 	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
-	require.NoError(t, prog.Create(t.Context(), "/src", "/out.tar.gz", []string{"/src/b/c.txt"}))
+	require.NoError(t, prog.Create(t.Context(), "/src", "/out.tar.gz", []string{"b/*.txt"}))
 
 	f, err := fs.Open("/out.tar.gz")
 	require.NoError(t, err)

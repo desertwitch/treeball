@@ -22,8 +22,10 @@ import (
 // If differences are found, Diff returns a non-nil *diff.Result along with
 // ErrDiffsFound. If no differences are found, the output file is removed before
 // returning. Any other returned error indicates a generic failure (I/O, sorting, etc).
-func (prog *Program) Diff(ctx context.Context, cmpOld string, cmpNew string, output string) (*diff.Result, error) { //nolint:unparam
+func (prog *Program) Diff(ctx context.Context, cmpOld string, cmpNew string, output string, excludes []string) (*diff.Result, error) { //nolint:unparam
 	var hasDifferences bool
+	var oldStream, newStream <-chan string
+	var oldErrs, newErrs <-chan error
 
 	out, err := prog.fs.Create(output)
 	if err != nil {
@@ -46,8 +48,12 @@ func (prog *Program) Diff(ctx context.Context, cmpOld string, cmpNew string, out
 	tw := tar.NewWriter(gw)
 	defer tw.Close()
 
-	oldStream, oldErrs := prog.tarPathStream(ctx, cmpOld, true)
-	newStream, newErrs := prog.tarPathStream(ctx, cmpNew, true)
+	if oldStream, oldErrs, err = prog.multiPathStream(ctx, cmpOld, true, excludes); err != nil {
+		return nil, fmt.Errorf("failed to establish stream: %w", err)
+	}
+	if newStream, newErrs, err = prog.multiPathStream(ctx, cmpNew, true, excludes); err != nil {
+		return nil, fmt.Errorf("failed to establish stream: %w", err)
+	}
 
 	result, err := diff.Strings(
 		ctx,

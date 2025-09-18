@@ -57,17 +57,17 @@ func (prog *Program) Create(ctx context.Context, input string, output string, ex
 			return nil
 		}
 
-		if isExcluded(path, excludes) {
-			if d.IsDir() {
-				return filepath.SkipDir
-			}
-
-			return nil
-		}
-
 		relPath, err := filepath.Rel(input, path)
 		if err != nil {
 			return fmt.Errorf("failed to obtain relative path: %w", err)
+		}
+
+		if excluded, err := isExcluded(relPath, excludes); err != nil {
+			return fmt.Errorf("invalid exclude pattern: %w", err)
+		} else if excluded && d.IsDir() {
+			return filepath.SkipDir
+		} else if excluded {
+			return nil
 		}
 
 		if err := writeDummyFile(tw, relPath, d.IsDir()); err != nil {
