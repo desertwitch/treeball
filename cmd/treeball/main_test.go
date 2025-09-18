@@ -79,7 +79,7 @@ func Test_CLI_CreateCommand_ArgCount_Error(t *testing.T) {
 }
 
 // Expectation: The 'create' subcommand should error when the exclude file does not exist.
-func Test_CLI_CreateCommand_ExcludeFile_Error(t *testing.T) {
+func Test_CLI_CreateCommand_ExcludeFileMissing_Error(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
 	cmd := newRootCmd(t.Context(), fs, nil, nil)
@@ -101,7 +101,7 @@ func Test_CLI_DiffCommand_ArgCount_Error(t *testing.T) {
 }
 
 // Expectation: The 'diff' subcommand should error when the exclude file does not exist.
-func Test_CLI_DiffCommand_ExcludeFile_Error(t *testing.T) {
+func Test_CLI_DiffCommand_ExcludeFileMissing_Error(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
 	cmd := newRootCmd(t.Context(), fs, nil, nil)

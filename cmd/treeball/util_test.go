@@ -280,7 +280,7 @@ func Test_Program_fsPathStream_Sorted_Success(t *testing.T) {
 }
 
 // Expectation: Should return error if the filesystem walk fails.
-func Test_Program_fsPathStream_Walk_Error(t *testing.T) {
+func Test_Program_fsPathStream_WalkDir_Error(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
 	require.NoError(t, afero.WriteFile(fs, "/somefile", []byte("data"), 0o644))
@@ -409,7 +409,7 @@ bar
 }
 
 // Expectation: Should return a non-nil slice when no excludes are provided.
-func Test_Program_mergeExcludes_NeitherArgument_Success(t *testing.T) {
+func Test_Program_mergeExcludes_NoExcludesGiven_Success(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
 	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
@@ -420,7 +420,7 @@ func Test_Program_mergeExcludes_NeitherArgument_Success(t *testing.T) {
 }
 
 // Expectation: Should return an error if the exclude file does not exist.
-func Test_Program_mergeExcludes_Open_Error(t *testing.T) {
+func Test_Program_mergeExcludes_ExcludeFileMissing_Error(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
 	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
@@ -494,7 +494,7 @@ func Test_extsortStrings_Success(t *testing.T) {
 }
 
 // Expectation: The channels should contain the correct error and no paths.
-func Test_extsortStrings_External_Error(t *testing.T) {
+func Test_extsortStrings_ExternalChannel_Error(t *testing.T) {
 	in := make(chan string)
 	close(in)
 
