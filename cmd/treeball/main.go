@@ -171,7 +171,7 @@ func newCreateCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.
 
 			excl, err := prog.mergeExcludes(excludes, excludesFile)
 			if err != nil {
-				return fmt.Errorf("failed to normalize exclude arguments: %w", err)
+				return fmt.Errorf("failed to merge exclude arguments: %w", err)
 			}
 
 			return prog.Create(ctx, args[0], args[1], excl)

@@ -75,15 +75,24 @@ func (fi fileInfoDirEntry) Name() string {
 	return fi.FileInfo.Name()
 }
 
-func isExcluded(path string, excludes []string) (bool, error) {
+func isExcluded(path string, isDir bool, excludes []string) (bool, error) {
 	path = filepath.ToSlash(filepath.Clean(path))
 
-	for _, pattern := range excludes {
-		matched, err := doublestar.Match(filepath.ToSlash(pattern), path)
+	for _, rawPattern := range excludes {
+		needDirMatch := strings.HasSuffix(rawPattern, "/")
+		pattern := filepath.ToSlash(rawPattern)
+
+		pattern = strings.TrimPrefix(strings.TrimSuffix(pattern, "/"), "/")
+
+		matched, err := doublestar.Match(pattern, path)
 		if err != nil {
 			return false, err
 		}
 		if matched {
+			if needDirMatch && !isDir {
+				continue
+			}
+
 			return true, nil
 		}
 	}
@@ -195,7 +204,7 @@ func (prog *Program) fsPathStream(ctx context.Context, path string, sort bool, e
 				return fmt.Errorf("failed to obtain relative path: %w", err)
 			}
 
-			if excluded, err := isExcluded(relPath, excludes); err != nil {
+			if excluded, err := isExcluded(relPath, d.IsDir(), excludes); err != nil {
 				return fmt.Errorf("invalid exclude pattern: %w", err)
 			} else if excluded && d.IsDir() {
 				return filepath.SkipDir
@@ -266,7 +275,7 @@ func (prog *Program) tarPathStream(ctx context.Context, path string, sort bool, 
 				break // EOF
 			}
 
-			if excluded, err := isExcluded(hdr.Name, excludes); err != nil {
+			if excluded, err := isExcluded(hdr.Name, strings.HasSuffix(hdr.Name, "/"), excludes); err != nil {
 				errs <- fmt.Errorf("invalid exclude pattern: %w", err)
 
 				return

@@ -62,7 +62,7 @@ func (prog *Program) Create(ctx context.Context, input string, output string, ex
 			return fmt.Errorf("failed to obtain relative path: %w", err)
 		}
 
-		if excluded, err := isExcluded(relPath, excludes); err != nil {
+		if excluded, err := isExcluded(relPath, d.IsDir(), excludes); err != nil {
 			return fmt.Errorf("invalid exclude pattern: %w", err)
 		} else if excluded && d.IsDir() {
 			return filepath.SkipDir
