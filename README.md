@@ -46,7 +46,7 @@ Directory trees are reshaped as artifacts - something you can archive, compare, 
 
 #### Core commands:
 - **Create** a tree tarball from any directory tree
-- **Diff** two tree tarballs to detect added/removed paths
+- **Diff** two tree sources to detect added/removed paths
 - **List** the contents of a tree tarball (sorted or original order)
 
 #### Operational strengths:
@@ -62,37 +62,44 @@ Directory trees are reshaped as artifacts - something you can archive, compare, 
 Build a `.tar.gz` archive from a directory tree.
 
 ```bash
-treeball create <root-folder> <output.tar.gz> [--exclude=PATH --exclude=PATH...]
+treeball create <root-folder> <output.tar.gz> [--exclude=PATTERN] [--excludes-from=PATH]
 ```
-
-Beware `--exclude` paths must be written in the same absolute/relative form as the `<root-folder>`.
 
 **Examples:**
 
 ```bash
 # Archive the current directory:
-treeball create . tree.tar.gz
+treeball create . output.tar.gz
 
 # Archive a directory with exclusions:
-treeball create /data/full archive.tar.gz --exclude=/data/full/tmp --exclude=/data/full/.git
+treeball create /mnt/data output.tar.gz --exclude='src/**/main.go'
+
+# Archive a directory with exclusions from a file:
+treeball create /mnt/data output.tar.gz --excludes-from=./excludes.txt'
 ```
 
 #### `treeball diff`
 
-Compare two tarballs and create a diff archive reflecting structural changes (added/removed files and directories).
+Compare two sources and create a diff archive reflecting structural changes (added/removed files and directories).
 
 ```bash
-treeball diff <old.tar.gz> <new.tar.gz> <diff.tar.gz> [--tmpdir=PATH]
+treeball diff <old> <new> <diff.tar.gz> [--exclude=PATTERN] [--excludes-from=PATH] [--tmpdir=PATH] 
 ```
+
+The command supports sources as either an existing directory or an existing tarball (.tar.gz).  
+This means you can compare tar vs. tar, tar vs. dir, dir vs. tar and dir vs. dir respectively.  
 
 **Examples:**
 
 ```bash
 # Basic usage of the command:
-treeball diff base.tar.gz updated.tar.gz changes.tar.gz
+treeball diff old.tar.gz new.tar.gz diff.tar.gz
+
+# Basic usage of the command with directory comparison:
+treeball diff old.tar.gz /mnt/new diff.tar.gz
 
 # Just see the diff in the terminal (without file output):
-treeball diff base.tar.gz updated.tar.gz /dev/null
+treeball diff old.tar.gz new.tar.gz /dev/null
 
 # Use of an on-disk temporary directory (for massive archives):
 treeball diff old.tar.gz new.tar.gz diff.tar.gz --tmpdir=/mnt/largedisk

@@ -179,7 +179,7 @@ func newCreateCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.
 	}
 
 	createCmd.Flags().StringArrayVar(&excludes, "exclude", nil, "pattern to exclude; can be repeated multiple times")
-	createCmd.Flags().StringVar(&excludesFile, "excludes-from", "", "path to a file containing exclusion patterns")
+	createCmd.Flags().StringVar(&excludesFile, "excludes-from", "", "path to a file containing exclude patterns")
 	createCmd.Flags().IntVar(&compressorConfig.CompressionLevel, "compression", gzipConfigDefault.CompressionLevel, "level of compression (0: none - 9: highest)")
 	createCmd.Flags().IntVar(&compressorConfig.BlockSize, "blocksize", gzipConfigDefault.BlockSize, "block size for compressing")
 	createCmd.Flags().IntVar(&compressorConfig.BlockCount, "blockcount", gzipConfigDefault.BlockCount, "blocks to compress in parallel")
@@ -215,7 +215,7 @@ func newDiffCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Wr
 	}
 
 	diffCmd.Flags().StringArrayVar(&excludes, "exclude", nil, "pattern to exclude; can be repeated multiple times")
-	diffCmd.Flags().StringVar(&excludesFile, "excludes-from", "", "path to a file containing exclusion patterns")
+	diffCmd.Flags().StringVar(&excludesFile, "excludes-from", "", "path to a file containing exclude patterns")
 	diffCmd.Flags().StringVar(&sorterConfig.TempFilesDir, "tmpdir", extSortConfigDefault.TempFilesDir, "on-disk location for intermediate files")
 	diffCmd.Flags().IntVar(&compressorConfig.CompressionLevel, "compression", gzipConfigDefault.CompressionLevel, "level of compression (0: none - 9: highest)")
 	diffCmd.Flags().IntVar(&sorterConfig.NumWorkers, "workers", extSortConfigDefault.NumWorkers, "workers for concurrent operations")

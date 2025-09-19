@@ -32,11 +32,11 @@ For detailed help on a specific command, run:
 
 	createHelpLong = `Create a tarball representing any given directory tree.
 
-The command will recursively include all files and directories under <root-folder>,
-excluding paths specified using the --exclude flags (which can be used multiple times).
+The command will recursively include all files and directories under <root-folder>.
 Archived paths will be presented as zero byte dummy files, preserving their exact names.
 
-Beware excludes must be written in the same absolute/relative form as the <root-folder>.
+Excludes are expected as relative to <root-folder> and following 'doublestar' format:
+https://github.com/bmatcuk/doublestar?tab=readme-ov-file#patterns
 
 All paths written to the tarball will be printed to standard output (stdout), any errors
 or other relevant operational output will be printed to standard error (stderr) respectively.
@@ -54,11 +54,14 @@ treeball create /mnt/user user.tar.gz --exclude=/mnt/user/appdata --exclude=/mnt
 	diffHelpLong = `Create a diff tarball containing only the differences between any two pre-existing sources.
 
 The command will compare the content of two existing (directory tree) sources and produce
-a "diff" tarball reflecting any additions or removals, comparing the "old" and "new" inputs.
+a "diff" tarball reflecting any additions or removals, comparing the "old" and "new" sources.
 This helps to identify which files were recently added or lost (e.g., for recovery scenarios).
 
 The command supports sources as either an existing directory or an existing tarball (.tar.gz).
 This means you can compare tar vs. tar, tar vs. dir, dir vs. tar and dir vs. dir respectively.
+
+Excludes are expected as relative to given sources and following 'doublestar' format:
+https://github.com/bmatcuk/doublestar?tab=readme-ov-file#patterns
 
 Any differences will also be written to standard output (stdout), while any other operational
 output will be written to standard error (stderr). The program will return with an exit code
