@@ -48,10 +48,8 @@ drop_caches() {
             sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches'
         else
             echo ""
-            echo "!!! NOW REQUESTING SUDO TO DROP KERNEL CACHES" >&2
-            set +e
+            echo "!!! NOW REQUESTING SUDO TO DROP THE KERNEL CACHES" >&2
             sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches'
-            set -e
             echo ""
         fi
     fi
