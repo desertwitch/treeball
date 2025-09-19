@@ -10,6 +10,12 @@ RESULTS="${input:-./treeball_benchmark.txt}"
 read -r -p "Enter TMP_LOG file path [./treeball_benchmark_tmp.txt]: " input
 TMP_LOG="${input:-./treeball_benchmark_tmp.txt}"
 
+echo ""
+echo "!! ENSURE ENOUGH INODES + DISK SPACE FOR THE FOLLOWING DIRS:"
+echo "!! - BENCH_DIR NEEDS AT LEAST AS MANY INODES AS SIZES BENCHMARKED"
+echo "!! - TMP_DIR NEEDS AT LEAST MULTIPLE GIGABYTES FOR EXTERNAL SORTING"
+echo ""
+
 read -r -p "Enter BENCH_DIR path [./treeball_benchmark]: " input
 BENCH_DIR="${input:-./treeball_benchmark}"
 
