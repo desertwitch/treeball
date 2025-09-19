@@ -39,7 +39,7 @@ func createDirAndFiles(ctx context.Context, fs afero.Fs, base string, d int, tot
 
 	for f := range filesPerDir {
 		if err := ctx.Err(); err != nil {
-			return err
+			return fmt.Errorf("error during creation: %w", ctx.Err())
 		}
 
 		index := d*filesPerDir + f
@@ -108,7 +108,7 @@ func createDummyTree(ctx context.Context, fs afero.Fs, base string, totalFiles i
 	}
 
 	if err := ctx.Err(); err != nil {
-		return err
+		return fmt.Errorf("error during creation: %w", err)
 	}
 
 	return nil
@@ -129,7 +129,6 @@ func main() {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
