@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2012,SC2206,SC2188
 set -euo pipefail
 
 read -r -p "Enter TREEBALL_BIN path [./treeball]: " input
