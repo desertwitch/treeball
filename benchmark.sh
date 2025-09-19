@@ -139,8 +139,8 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
-echo "--- $(date) ---" | tee -a "$RESULTS"
-
+echo "=== $(date) ===" | tee -a "$RESULTS"
+echo "" | tee -a "$RESULTS"
 echo "TREEBALL_BIN=$TREEBALL_BIN" | tee -a "$RESULTS"
 echo "RESULTS=$RESULTS" | tee -a "$RESULTS"
 echo "TMP_LOG=$TMP_LOG" | tee -a "$RESULTS"
@@ -148,7 +148,6 @@ echo "BENCH_DIR=$BENCH_DIR" | tee -a "$RESULTS"
 echo "BENCH_DIR=$BENCH_DIR" | tee -a "$RESULTS"
 echo "SIZES=(${SIZES[*]})" | tee -a "$RESULTS"
 echo "" | tee -a "$RESULTS"
-
 echo "CPU cores: $(nproc)" | tee -a "$RESULTS"
 echo "Filesystem type: $(df -T "$BENCH_DIR" | awk 'NR==2 {print $2}')" | tee -a "$RESULTS"
 
@@ -159,8 +158,9 @@ for size in "${SIZES[@]}"; do
     run_benchmarks "$size"
 done
 
-echo "Benchmark completed for: (${SIZES[*]})." | tee -a "$RESULTS"
-echo "---------------------------" | tee -a "$RESULTS"
+echo ""
+echo "Benchmark completed for: (${SIZES[*]})."
+echo "===========================" | tee -a "$RESULTS"
+echo ""
 
-log "Done. Results saved to: $RESULTS."
 cat "$RESULTS"
