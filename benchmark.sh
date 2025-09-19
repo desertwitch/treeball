@@ -2,6 +2,16 @@
 # shellcheck disable=SC2012,SC2206,SC2188,SC2129
 set -euo pipefail
 
+if [[ ! $EUID -eq 0 ]]; then
+    echo ""
+    echo "!! IF NOT RUNNING AS ROOT (WHICH IS OK), YOU WILL BE PROMPTED"
+    echo "!! FOR YOUR CREDENTIALS BY SUDO, AS THIS IS REQUIRED TO CLEAR"
+    echo "!! THE KERNEL CACHES BETWEEN BENCHMARKING JOBS. THIS MAY EVEN"
+    echo "!! OCCUR MULTIPLE TIMES DUE TO SUDO REAUTHENTICATION TIMEOUT."
+    echo "!! IF YOU WANT TO AVOID THAT, INSPECT SCRIPT AND RUN AS ROOT."
+    echo ""
+fi
+
 read -r -p "Enter TREEBALL_BIN path [./treeball]: " input
 TREEBALL_BIN="${input:-./treeball}"
 
@@ -51,14 +61,14 @@ drop_caches() {
             echo ""
             echo "!! NOW REQUESTING SUDO TO DROP THE KERNEL CACHES:" >&2
             sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches'
-            echo "Proceeding with benchmarks..."
+            echo "!! THANK YOU, NOW PROCEEDING WITH BENCHMARKS..."
             echo ""
         fi
     fi
 }
 
 check_treeball() {
-    if ! "$TREEBALL_BIN" --version >> "$RESULTS"; then
+    if ! "$TREEBALL_BIN" --version | tee -a "$RESULTS"; then
         echo "Error: treeball binary not working at $TREEBALL_BIN" >&2
         exit 1
     fi
