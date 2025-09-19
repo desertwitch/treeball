@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+export PATH=$PATH:/usr/local/go/bin
+
 read -r -p "Enter TREEBALL_BIN path [./treeball]: " input
 TREEBALL_BIN="${input:-./treeball}"
 
