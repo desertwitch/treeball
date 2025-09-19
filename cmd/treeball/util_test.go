@@ -409,7 +409,7 @@ bar
 }
 
 // Expectation: Should return a non-nil slice when no excludes are provided.
-func Test_Program_mergeExcludes_NoExcludesGiven_Success(t *testing.T) {
+func Test_Program_mergeExcludes_NoExcludes_Success(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
 	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
@@ -684,4 +684,13 @@ func Test_isExcluded_Table(t *testing.T) {
 				tt.path, tt.isDir, tt.excludes)
 		})
 	}
+}
+
+// Expectation: The function should reject an invalid pattern and return an error.
+func Test_isExcluded_InvalidExcludePattern_Error(t *testing.T) {
+	result, err := isExcluded("/a/b/c", true, []string{"a["})
+
+	require.Error(t, err)
+	require.ErrorContains(t, err, "pattern")
+	require.False(t, result)
 }

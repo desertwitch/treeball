@@ -104,7 +104,7 @@ func Test_Program_Create_WithExcludes_Success(t *testing.T) {
 }
 
 // Expectation: A tarball should be created with all given paths contained, except the excluded file.
-func Test_Program_Create_WithFileExcludes_Success(t *testing.T) {
+func Test_Program_Create_WithFileExcluded_Success(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
 	require.NoError(t, afero.WriteFile(fs, "/src/a.txt", []byte("a"), 0o644))
