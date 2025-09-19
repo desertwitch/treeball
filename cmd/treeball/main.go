@@ -45,8 +45,9 @@ const (
 	baseFilePerms   = 0o666
 	baseFolderPerms = 0o777
 
-	tarStreamBuffer = 1000
-	fsStreamBuffer  = 1000
+	tarStreamBuffer  = 1000
+	fsStreamBuffer   = 1000
+	stackTraceBuffer = 1 << 24
 
 	exitTimeout        = 10 * time.Second
 	exitCodeSuccess    = 0
@@ -261,6 +262,17 @@ func main() {
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+
+	sigChan2 := make(chan os.Signal, 1)
+	signal.Notify(sigChan2, syscall.SIGUSR1)
+
+	go func() {
+		for range sigChan2 {
+			buf := make([]byte, stackTraceBuffer)
+			stacklen := runtime.Stack(buf, true)
+			os.Stderr.Write(buf[:stacklen])
+		}
+	}()
 
 	errChan := make(chan error, 1)
 	go func() {
