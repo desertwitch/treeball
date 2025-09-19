@@ -142,7 +142,7 @@ fi
 
 echo ""
 echo "===========================" | tee -a "$RESULTS"
-echo "=== $(date) ===" | tee -a "$RESULTS"
+date | tee -a "$RESULTS"
 echo "===========================" | tee -a "$RESULTS"
 
 echo "" | tee -a "$RESULTS"
