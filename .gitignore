@@ -2,6 +2,7 @@
 /vendor
 /coverage.tmp
 /coverage.txt
+/slack-desc
 /TODO
 # Added by goreleaser init:
 dist/
