@@ -99,7 +99,6 @@ run_benchmarks() {
     /usr/bin/time -f "DIFF TAR/TAR wall: %e sec, user: %U, sys: %S, RAM: %M KB" -a -o "$TMP_LOG" \
         "$TREEBALL_BIN" diff "$tar1" "$tar2" "$diff" --tmpdir="$TMP_DIR" &> /dev/null
     set -e
-    ls -lh "$diff" | awk '{print "DIFF TAR/TAR size: " $5}' >> "$TMP_LOG"
     extract_and_log_metrics "DIFF TAR/TAR"
 
     # 5. DIFF - TAR/FOLDER (ignore exit 1)
@@ -108,7 +107,6 @@ run_benchmarks() {
     /usr/bin/time -f "DIFF TAR/FOLDER wall: %e sec, user: %U, sys: %S, RAM: %M KB" -a -o "$TMP_LOG" \
         "$TREEBALL_BIN" diff "$tar1" "$root" "$diff" --tmpdir="$TMP_DIR" &> /dev/null
     set -e
-    ls -lh "$diff" | awk '{print "DIFF TAR/FOLDER size: " $5}' >> "$TMP_LOG"
     extract_and_log_metrics "DIFF TAR/FOLDER"
 
     # 6. DIFF - FOLDER/FOLDER (ignore exit 1)
@@ -117,7 +115,6 @@ run_benchmarks() {
     /usr/bin/time -f "DIFF FOLDER/FOLDER wall: %e sec, user: %U, sys: %S, RAM: %M KB" -a -o "$TMP_LOG" \
         "$TREEBALL_BIN" diff "$root" "$root" "$diff" --tmpdir="$TMP_DIR" &> /dev/null
     set -e
-    ls -lh "$diff" | awk '{print "DIFF FOLDER/FOLDER size: " $5}' >> "$TMP_LOG"
     extract_and_log_metrics "DIFF FOLDER/FOLDER"
 
     # 7. LIST
