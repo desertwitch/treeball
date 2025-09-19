@@ -75,7 +75,7 @@ treeball create . output.tar.gz
 treeball create /mnt/data output.tar.gz --exclude='src/**/main.go'
 
 # Archive a directory with exclusions from a file:
-treeball create /mnt/data output.tar.gz --excludes-from=./excludes.txt'
+treeball create /mnt/data output.tar.gz --excludes-from=./excludes.txt
 ```
 
 #### `treeball diff`
