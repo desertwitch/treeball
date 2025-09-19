@@ -215,11 +215,6 @@ Benchmarks demonstrate consistent performance across small to large directory tr
 > RAM usage per million files drops significantly with scale due to **external sorting** and streaming data.  
 > [Stress tests](./PERFORMANCE.md) with trees of **up to 400 million files** have shown continued low resource consumption trends.  
 
-**Benchmark Environment**:  
-Average path length: ~80 characters / Maximum directory depth: 5 levels  
-Default settings / `--tmpdir` (on same disk) / Maximum compression level (9)  
-i5-12600K 3.69 GHz (16 cores), 32GB RAM, 980 Pro NVMe (EXT4), Ubuntu 24.04.2  
-
 ### SECURITY, CONTRIBUTIONS, AND LICENSE
 
 Please report any issues via the GitHub Issues tracker. While no major features are currently planned, contributions are welcome. Contributions should be submitted through GitHub and, if possible, should pass the test suite and comply with the project's linting rules. All code is licensed under the MIT license.
