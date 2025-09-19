@@ -138,6 +138,17 @@ treeball list input.tar.gz --tmpdir=/mnt/largedisk
 > Ensure that a suitable location is provided (in terms of speed and available space), as such data can peak at multiple gigabytes.
 > If none is provided, the intelligent mechanism will try choose one for you, falling back to the system's default temporary file location.
 
+### EXCLUDE PATTERNS
+
+Exclusion patterns are expected to always be relative to the given input directory tree.  
+This means, passing `/mnt/user` to a command, `a.txt` would exclude `/mnt/user/a.txt`.  
+
+`--exclude` arguments can be repeated multiple times, or a `--excludes-from` file be loaded.  
+If either type of argument is given, all exclusion patterns are merged together at program runtime.  
+
+All exclusion patterns are expected to follow the `doublestar`-format:  
+https://github.com/bmatcuk/doublestar?tab=readme-ov-file#patterns
+
 ### ADVANCED OPTIONS
 
 These optional options allow for more granular control with advanced workloads or environments.
