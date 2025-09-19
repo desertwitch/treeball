@@ -65,9 +65,9 @@ create_dummy_tree() {
 run_benchmarks() {
     local count=$1
     local root="$BENCH_DIR/root_$count"
-    local tar1="tree_${count}_a.tar.gz"
-    local tar2="tree_${count}_b.tar.gz"
-    local diff="diff_${count}.tar.gz"
+    local tar1="$TMP_DIR/tree_${count}_a.tar.gz"
+    local tar2="$TMP_DIR/tree_${count}_b.tar.gz"
+    local diff="$TMP_DIR/diff_${count}.tar.gz"
 
     log "Generating directory with $count files..."
     rm -rf "$root"
