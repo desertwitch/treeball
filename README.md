@@ -86,7 +86,7 @@ Compare two sources and create a diff archive reflecting structural changes (add
 treeball diff <old> <new> <diff.tar.gz> [--exclude=PATTERN] [--excludes-from=PATH] [--tmpdir=PATH] 
 ```
 
-The command supports sources as either an existing directory or an existing tarball (.tar.gz).  
+The command supports sources as either an existing directory or an existing tarball (`.tar.gz`).  
 This means you can compare tar vs. tar, tar vs. dir, dir vs. tar and dir vs. dir respectively.  
 
 **Examples:**
