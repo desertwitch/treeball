@@ -82,7 +82,6 @@ run_benchmarks() {
         "$TREEBALL_BIN" create "$root" "$tar1" > /dev/null
     ls -lh "$tar1" | awk '{print "CREATE size: " $5}' >> "$TMP_LOG"
     extract_and_log_metrics "CREATE"
-    echo "" >> "$TMP_LOG"
 
     # 2. Modify (add files)
     touch "$root/new_file_1" "$root/new_file_2"
@@ -93,7 +92,6 @@ run_benchmarks() {
         "$TREEBALL_BIN" create "$root" "$tar2" > /dev/null
     ls -lh "$tar2" | awk '{print "CREATE2 size: " $5}' >> "$TMP_LOG"
     extract_and_log_metrics "CREATE2"
-    echo "" >> "$TMP_LOG"
 
     # 4. DIFF - TAR/TAR (ignore exit 1)
     drop_caches
@@ -102,7 +100,6 @@ run_benchmarks() {
         "$TREEBALL_BIN" diff "$tar1" "$tar2" "$diff" --tmpdir="$TMP_DIR" &> /dev/null
     set -e
     extract_and_log_metrics "DIFF TAR/TAR"
-    echo "" >> "$TMP_LOG"
 
     # 5. DIFF - TAR/FOLDER (ignore exit 1)
     drop_caches
@@ -111,7 +108,6 @@ run_benchmarks() {
         "$TREEBALL_BIN" diff "$tar1" "$root" "$diff" --tmpdir="$TMP_DIR" &> /dev/null
     set -e
     extract_and_log_metrics "DIFF TAR/FOLDER"
-    echo "" >> "$TMP_LOG"
 
     # 6. DIFF - FOLDER/FOLDER (ignore exit 1)
     drop_caches
@@ -120,22 +116,18 @@ run_benchmarks() {
         "$TREEBALL_BIN" diff "$root" "$root" "$diff" --tmpdir="$TMP_DIR" &> /dev/null
     set -e
     extract_and_log_metrics "DIFF FOLDER/FOLDER"
-    echo "" >> "$TMP_LOG"
 
     # 7. LIST
     drop_caches
     /usr/bin/time -f "LIST wall: %e sec, user: %U, sys: %S, RAM: %M KB" -a -o "$TMP_LOG" \
         "$TREEBALL_BIN" list "$tar2" --tmpdir="$TMP_DIR" > /dev/null
     extract_and_log_metrics "LIST"
-    echo "" >> "$TMP_LOG"
 
-    echo "" >> "$RESULTS"
     avg_len=$(find "$root" -type f | awk '{ total += length($0); count++ } END { if (count > 0) print int(total/count); else print 0 }')
     echo "Average path length: ${avg_len} characters" >> "$RESULTS"
 
     max_depth=$(find "$root" -type f -printf '%d\n' | sort -n | tail -1)
     echo "Maximum path depth: ${max_depth} levels" >> "$RESULTS"
-    echo "" >> "$RESULTS"
 
     cat "$TMP_LOG" >> "$RESULTS"
     rm -f "$tar1" "$tar2" "$diff" "$TMP_LOG"
