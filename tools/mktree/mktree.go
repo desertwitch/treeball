@@ -1,4 +1,4 @@
-// create_bench_tree is a benchmark helper tool for synthetic tree creation.
+// mktree is a benchmark helper tool for synthetic tree creation.
 //
 //nolint:mnd
 package main
@@ -116,7 +116,7 @@ func createDummyTree(ctx context.Context, fs afero.Fs, base string, totalFiles i
 
 func main() {
 	if len(os.Args) != 3 {
-		fmt.Fprintf(os.Stderr, "usage: create_bench_tree <base_dir> <file_count>\n")
+		fmt.Fprintf(os.Stderr, "usage: mktree <base_dir> <file_count>\n")
 		os.Exit(1)
 	}
 

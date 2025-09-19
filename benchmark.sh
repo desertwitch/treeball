@@ -82,7 +82,7 @@ extract_and_log_metrics() {
 }
 
 create_dummy_tree() {
-    go run ./tools/create_bench_tree.go "$1" "$2"
+    go run ./tools/mktree "$1" "$2"
 }
 
 run_benchmarks() {
