@@ -58,6 +58,7 @@ a "diff" tarball reflecting any additions or removals, comparing the "old" and "
 This helps to identify which files were recently added or lost (e.g., for recovery scenarios).
 
 The command supports sources as either an existing directory or an existing tarball (.tar.gz).
+This means you can compare tar vs. tar, tar vs. dir, dir vs. tar and dir vs. dir respectively.
 
 Any differences will also be written to standard output (stdout), while any other operational
 output will be written to standard error (stderr). The program will return with an exit code
