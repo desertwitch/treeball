@@ -201,7 +201,7 @@ make
 
 ### BENCHMARKS
 
-Benchmarks demonstrate consistent performance across small to large directory trees.
+Benchmarks demonstrate consistent [performance](./PERFORMANCE.md) across small to large directory trees.
 
 | Files  | CREATE (Time / RAM / CPU)    | DIFF (Time / RAM / CPU)      | LIST (Time / RAM / CPU)      | Treeball Size |
 |--------|------------------------------|------------------------------|------------------------------|---------------|
@@ -213,7 +213,7 @@ Benchmarks demonstrate consistent performance across small to large directory tr
 
 > CPU usage above 100% indicates that the program is **multi-threaded** and effectively parallelized.  
 > RAM usage per million files drops significantly with scale due to **external sorting** and streaming data.  
-> [Stress tests](./PERFORMANCE.md) with trees of **up to 400 million files** have shown continued low resource consumption trends.  
+> Stress tests with trees of **up to 400 million files** have shown continued [low resource consumption](./PERFORMANCE.md) trends.  
 
 ### SECURITY, CONTRIBUTIONS, AND LICENSE
 
