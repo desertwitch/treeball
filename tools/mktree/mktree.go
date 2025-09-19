@@ -39,7 +39,7 @@ func createDirAndFiles(ctx context.Context, fs afero.Fs, base string, d int, tot
 
 	for f := range filesPerDir {
 		if err := ctx.Err(); err != nil {
-			return fmt.Errorf("error during creation: %w", ctx.Err())
+			return fmt.Errorf("error during creation: %w", err)
 		}
 
 		index := d*filesPerDir + f
