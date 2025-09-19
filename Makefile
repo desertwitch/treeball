@@ -16,8 +16,8 @@ $(BINARY): ## Builds the application
 	CGO_ENABLED=0 GOFLAGS="-mod=vendor" go build -ldflags="-w -s -X main.Version=$(VERSION) -buildid=" -trimpath -o $(BINARY) $(SRC_DIR)
 	@$(MAKE) info
 
-benchmark: ## Runs the benchmark script (run as root for clearing kernel caches)
-	./benchmark.sh
+benchmark: ## Runs the benchmark script
+	/usr/bin/env bash ./benchmark.sh
 
 check: ## Runs all static analysis and tests on the application code
 	@$(MAKE) lint
