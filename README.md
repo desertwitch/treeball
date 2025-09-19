@@ -143,7 +143,7 @@ treeball list input.tar.gz --tmpdir=/mnt/largedisk
 Exclusion patterns are expected to always be relative to the given input directory tree.  
 This means, passing `/mnt/user` to a command, `a.txt` would exclude `/mnt/user/a.txt`.  
 
-`--exclude` arguments can be repeated multiple times, or a `--excludes-from` file be loaded.  
+`--exclude` arguments can be repeated multiple times, and/or a `--excludes-from` file be loaded.  
 If either type of argument is given, all exclusion patterns are merged together at program runtime.  
 
 All exclusion patterns are expected to follow the `doublestar`-format:  
