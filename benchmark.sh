@@ -140,11 +140,13 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
-echo "--- $(date +'%H:%M:%S') ---" | tee -a "$RESULTS"
+echo "--- $(date) ---" | tee -a "$RESULTS"
 
 echo "TREEBALL_BIN=$TREEBALL_BIN" | tee -a "$RESULTS"
-echo "BENCH_DIR=$BENCH_DIR" | tee -a "$RESULTS"
+echo "RESULTS=$RESULTS" | tee -a "$RESULTS"
 echo "TMP_LOG=$TMP_LOG" | tee -a "$RESULTS"
+echo "BENCH_DIR=$BENCH_DIR" | tee -a "$RESULTS"
+echo "BENCH_DIR=$BENCH_DIR" | tee -a "$RESULTS"
 echo "SIZES=(${SIZES[*]})" | tee -a "$RESULTS"
 echo "" | tee -a "$RESULTS"
 
