@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -92,4 +93,15 @@ func Test_Tool_createDummyTree_CreateFile_Error(t *testing.T) {
 	err := createDummyTree(t.Context(), fs, "/fail", 100000)
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "creating file")
+}
+
+// Expectation: The requested tree creation should respect a cancellation.
+func Test_Tool_createDummyTree_CtxCancel_Error(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	err := createDummyTree(ctx, fs, "/tree", 100000)
+	require.ErrorIs(t, err, context.Canceled)
 }

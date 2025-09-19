@@ -30,7 +30,7 @@ func buildPath(base string, d int) string {
 	return filepath.Join(base, level1, level2, level3, level4)
 }
 
-func createDirAndFiles(fs afero.Fs, base string, d int, totalFiles int) error {
+func createDirAndFiles(ctx context.Context, fs afero.Fs, base string, d int, totalFiles int) error {
 	subdir := buildPath(base, d)
 
 	if err := fs.MkdirAll(subdir, 0o755); err != nil {
@@ -38,6 +38,10 @@ func createDirAndFiles(fs afero.Fs, base string, d int, totalFiles int) error {
 	}
 
 	for f := range filesPerDir {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
 		index := d*filesPerDir + f
 		if index >= totalFiles {
 			break
@@ -73,7 +77,7 @@ func createDummyTree(ctx context.Context, fs afero.Fs, base string, totalFiles i
 		go func() {
 			defer wg.Done()
 			for d := range tasks {
-				if err := createDirAndFiles(fs, base, d, totalFiles); err != nil {
+				if err := createDirAndFiles(ctx, fs, base, d, totalFiles); err != nil {
 					once.Do(func() {
 						errCh <- err
 						cancel()
@@ -100,6 +104,10 @@ func createDummyTree(ctx context.Context, fs afero.Fs, base string, totalFiles i
 	close(errCh)
 
 	if err, ok := <-errCh; ok && err != nil {
+		return err
+	}
+
+	if err := ctx.Err(); err != nil {
 		return err
 	}
 
