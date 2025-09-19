@@ -151,10 +151,9 @@ echo "BENCH_DIR=$BENCH_DIR" | tee -a "$RESULTS"
 echo "BENCH_DIR=$BENCH_DIR" | tee -a "$RESULTS"
 echo "SIZES=(${SIZES[*]})" | tee -a "$RESULTS"
 echo "" | tee -a "$RESULTS"
+
 echo "CPU cores: $(nproc)" | tee -a "$RESULTS"
 echo "Filesystem type: $(df -T "$BENCH_DIR" | awk 'NR==2 {print $2}')" | tee -a "$RESULTS"
-echo "" | tee -a "$RESULTS"
-
 check_treeball
 
 log "Starting benchmarks..."
