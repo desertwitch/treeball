@@ -35,7 +35,16 @@ log() {
 
 drop_caches() {
     sync
-    sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches'
+    if [[ $EUID -eq 0 ]]; then
+        echo 3 > /proc/sys/vm/drop_caches
+    else
+        if sudo -n true 2>/dev/null; then
+            sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches'
+        else
+            echo "[WARNING] Need sudo to drop kernel caches..." >&2
+            sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches'
+        fi
+    fi
 }
 
 check_treeball() {
