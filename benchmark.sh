@@ -73,7 +73,7 @@ run_benchmarks() {
     rm -rf "$root"
     create_dummy_tree "$root" "$count"
 
-    echo -e "\n=== $count FILES ===" >> "$RESULTS"
+    echo -e "\n--- $count FILES ---" >> "$RESULTS"
     log "Benching with $count files..."
 
     # 1. CREATE
@@ -139,7 +139,10 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
+echo "===========================" | tee -a "$RESULTS"
 echo "=== $(date) ===" | tee -a "$RESULTS"
+echo "===========================" | tee -a "$RESULTS"
+
 echo "" | tee -a "$RESULTS"
 echo "TREEBALL_BIN=$TREEBALL_BIN" | tee -a "$RESULTS"
 echo "RESULTS=$RESULTS" | tee -a "$RESULTS"
@@ -154,13 +157,13 @@ echo "Filesystem type: $(df -T "$BENCH_DIR" | awk 'NR==2 {print $2}')" | tee -a 
 check_treeball
 
 log "Starting benchmarks..."
+
 for size in "${SIZES[@]}"; do
     run_benchmarks "$size"
 done
 
-echo ""
-echo "Benchmark completed for: (${SIZES[*]})."
+echo "" | tee -a "$RESULTS"
 echo "===========================" | tee -a "$RESULTS"
-echo ""
+echo "" | tee -a "$RESULTS"
 
 cat "$RESULTS"
