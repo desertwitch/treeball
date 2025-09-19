@@ -150,7 +150,7 @@ echo "TREEBALL_BIN=$TREEBALL_BIN" | tee -a "$RESULTS"
 echo "RESULTS=$RESULTS" | tee -a "$RESULTS"
 echo "TMP_LOG=$TMP_LOG" | tee -a "$RESULTS"
 echo "BENCH_DIR=$BENCH_DIR" | tee -a "$RESULTS"
-echo "BENCH_DIR=$BENCH_DIR" | tee -a "$RESULTS"
+echo "TMP_DIR=$TMP_DIR_DIR" | tee -a "$RESULTS"
 echo "SIZES=(${SIZES[*]})" | tee -a "$RESULTS"
 echo "" | tee -a "$RESULTS"
 
