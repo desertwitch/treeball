@@ -7,10 +7,12 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"runtime"
 	"strconv"
 	"sync"
+	"syscall"
 
 	"github.com/spf13/afero"
 )
@@ -54,11 +56,11 @@ func createDirAndFiles(fs afero.Fs, base string, d int, totalFiles int) error {
 	return nil
 }
 
-func createDummyTree(fs afero.Fs, base string, totalFiles int) error {
+func createDummyTree(ctx context.Context, fs afero.Fs, base string, totalFiles int) error {
 	var once sync.Once
 	var wg sync.WaitGroup
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	tasks := make(chan int, workers)
@@ -118,8 +120,30 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := createDummyTree(afero.NewOsFs(), baseDir, totalFiles); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+
+	errChan := make(chan error, 1)
+	go func() {
+		defer close(errChan)
+		if err := createDummyTree(ctx, afero.NewOsFs(), baseDir, totalFiles); err != nil {
+			errChan <- fmt.Errorf("failed to create tree: %w", err)
+		}
+	}()
+
+	for {
+		select {
+		case <-sigChan:
+			cancel()
+		case err := <-errChan:
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "error: %v\n", err)
+				os.Exit(1)
+			}
+			os.Exit(0)
+		}
 	}
 }
