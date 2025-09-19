@@ -2,6 +2,11 @@
 # shellcheck disable=SC2012,SC2206,SC2188,SC2129
 set -euo pipefail
 
+command -v go >/dev/null 2>&1 || {
+    echo "Go compiler not found in PATH" >&2
+    exit 1
+}
+
 if [[ ! $EUID -eq 0 ]]; then
     echo ""
     echo "!! IF NOT RUNNING AS ROOT (WHICH IS OK), YOU WILL BE PROMPTED"
@@ -160,11 +165,6 @@ run_benchmarks() {
     cat "$TMP_LOG" >> "$RESULTS"
     rm -f "$tar1" "$tar2" "$diff" "$TMP_LOG"
     rm -rf "$root"
-}
-
-command -v go >/dev/null 2>&1 || {
-    echo "Go compiler not found in PATH" >&2
-    exit 1
 }
 
 echo ""
