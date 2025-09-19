@@ -54,11 +54,11 @@ treeball create /mnt/data output.tar.gz --excludes-from=./excludes.txt`
 
 	diffHelpShort = "Create a diff tarball from any two pre-existing sources"
 
-	diffHelpLong = `Create a diff tarball containing only the differences between any two pre-existing sources.
+	diffHelpLong = `Create a diff tarball containing only the structural differences between any two sources.
 
-The command will compare the content of two existing (directory tree) sources and produce
+The command will compare the structure of two existing (directory tree) sources and produce
 a "diff" tarball reflecting any additions or removals, comparing the "old" and "new" sources.
-This helps to identify which files were recently added or lost (e.g., for recovery scenarios).
+This helps to identify which paths were recently added or lost (e.g., for recovery scenarios).
 
 The command supports sources as either an existing directory or an existing tarball (.tar.gz).
 This means you can compare tar vs. tar, tar vs. dir, dir vs. tar and dir vs. dir respectively.
