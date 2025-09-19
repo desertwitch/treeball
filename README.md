@@ -83,7 +83,7 @@ treeball create /mnt/data output.tar.gz --excludes-from=./excludes.txt
 Compare two sources and create a diff archive reflecting structural changes (added/removed files and directories).
 
 ```bash
-treeball diff <old> <new> <diff.tar.gz> [--exclude=PATTERN] [--excludes-from=PATH] [--tmpdir=PATH] 
+treeball diff <old> <new> <diff.tar.gz> [--tmpdir=PATH] [--exclude=PATTERN] [--excludes-from=PATH] 
 ```
 
 The command supports sources as either an existing directory or an existing tarball (`.tar.gz`).  
@@ -117,7 +117,7 @@ Beware the `diff` archive contains synthetic `+++` and `---` directories to refl
 List the contents of a `.tar.gz` tree archive (sorted or unsorted).
 
 ```bash
-treeball list <input.tar.gz> [--sort=false] [--tmpdir=PATH]
+treeball list <input.tar.gz> [--tmpdir=PATH] [--sort=false]
 ```
 
 **Examples:**
