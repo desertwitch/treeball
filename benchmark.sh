@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-read -p -r "Enter TREEBALL_BIN path [./treeball]: " input
+read -r -p "Enter TREEBALL_BIN path [./treeball]: " input
 TREEBALL_BIN="${input:-./treeball}"
 
-read -p -r "Enter RESULTS file path [./treeball_benchmark.txt]: " input
+read -r -p "Enter RESULTS file path [./treeball_benchmark.txt]: " input
 RESULTS="${input:-./treeball_benchmark.txt}"
 
-read -p -r "Enter TMP_LOG file path [./treeball_benchmark_tmp.txt]: " input
+read -r -p "Enter TMP_LOG file path [./treeball_benchmark_tmp.txt]: " input
 TMP_LOG="${input:-./treeball_benchmark_tmp.txt}"
 
-read -p -r "Enter BENCH_DIR path [./treeball_benchmark]: " input
+read -r -p "Enter BENCH_DIR path [./treeball_benchmark]: " input
 BENCH_DIR="${input:-./treeball_benchmark}"
 
-read -p -r "Enter TMP_DIR path [./treeball_benchmark_tmp]: " input
+read -r -p "Enter TMP_DIR path [./treeball_benchmark_tmp]: " input
 TMP_DIR="${input:-./treeball_benchmark_tmp}"
 
-read -p -r "Enter SIZES (space-separated) [5000 10000 50000 100000 500000 1000000 5000000]: " input
+read -r -p "Enter SIZES (space-separated) [5000 10000 50000 100000 500000 1000000 5000000]: " input
 SIZES=(${input:-5000 10000 50000 100000 500000 1000000 5000000})
 
 mkdir -p "$BENCH_DIR"
