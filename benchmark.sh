@@ -23,8 +23,8 @@ BENCH_DIR="${input:-./treeball_benchmark}"
 read -r -p "Enter TMP_DIR path [./treeball_benchmark_tmp]: " input
 TMP_DIR="${input:-./treeball_benchmark_tmp}"
 
-read -r -p "Enter SIZES (space-separated) [5000 10000 50000 100000 500000 1000000 5000000]: " input
-SIZES=(${input:-5000 10000 50000 100000 500000 1000000 5000000})
+read -r -p "Enter SIZES (space-separated) [5000 10000 50000 100000 500000 1000000 5000000 10000000]: " input
+SIZES=(${input:-5000 10000 50000 100000 500000 1000000 5000000 10000000})
 
 cleanup() {
     rm -f "$TMP_LOG"
