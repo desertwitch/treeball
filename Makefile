@@ -18,7 +18,7 @@ $(BINARY): ## Builds the application
 
 benchmark: ## Runs the benchmark script
 	@$(MAKE) $(BINARY)
-	/usr/bin/env bash ./benchmark.sh
+	@/usr/bin/env bash ./benchmark.sh
 
 check: ## Runs all static analysis and tests on the application code
 	@$(MAKE) lint
