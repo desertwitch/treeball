@@ -51,6 +51,7 @@ drop_caches() {
             echo ""
             echo "!! NOW REQUESTING SUDO TO DROP THE KERNEL CACHES:" >&2
             sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches'
+            echo "Proceeding with benchmarks..."
             echo ""
         fi
     fi
