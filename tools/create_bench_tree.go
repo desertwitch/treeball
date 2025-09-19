@@ -1,4 +1,4 @@
-// create_bench_tree is a benchmark helper tool for file tree creation.
+// create_bench_tree is a benchmark helper tool for synthetic tree creation.
 //
 //nolint:mnd
 package main
