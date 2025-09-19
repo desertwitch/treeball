@@ -171,13 +171,10 @@ echo "TMP_DIR=$TMP_DIR" | tee -a "$RESULTS"
 echo "SIZES=(${SIZES[*]})" | tee -a "$RESULTS"
 echo "" | tee -a "$RESULTS"
 
-REL_FIXED_LEN=58
-MAX_PATH_LEN=$(( ${#BENCH_DIR} + 1 + REL_FIXED_LEN ))
-
 echo "CPU cores: $(nproc)" | tee -a "$RESULTS"
 echo "Filesystem type: $(df -T "$BENCH_DIR" | awk 'NR==2 {print $2}')" | tee -a "$RESULTS"
-echo "Max directory depth: 6" | tee -a "$RESULTS"
-echo "Max path length: $MAX_PATH_LEN characters" | tee -a "$RESULTS"
+echo "Max directory depth: 5" | tee -a "$RESULTS"
+echo "Max path length: $(( ${#BENCH_DIR} + 1 + 58 )) characters" | tee -a "$RESULTS"
 check_treeball
 
 echo ""
