@@ -124,13 +124,13 @@ treeball list <input.tar.gz> [--sort=false] [--tmpdir=PATH]
 
 ```bash
 # List the contents as sorted (default):
-treeball list archive.tar.gz
+treeball list input.tar.gz
 
 # List the contents in their original archive order:
-treeball list archive.tar.gz --sort=false
+treeball list input.tar.gz --sort=false
 
 # Use of an on-disk temporary directory (for massive archives):
-treeball list archive.tar.gz --tmpdir=/mnt/largedisk
+treeball list input.tar.gz --tmpdir=/mnt/largedisk
 ```
 
 > **Performance considerations with massive archives:**
