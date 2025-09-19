@@ -102,7 +102,7 @@ run_benchmarks() {
     # 1. CREATE
     drop_caches
     /usr/bin/time -f "CREATE wall: %e sec, user: %U, sys: %S, RAM: %M KB" -o "$TMP_LOG" \
-        "$TREEBALL_BIN" create "$root" "$tar1" > /dev/null
+        "$TREEBALL_BIN" create "$root" "$tar1" --exclude='random1' --exclude='random2' --exclude='random3' > /dev/null
     ls -lh "$tar1" | awk '{print "CREATE size: " $5}' >> "$TMP_LOG"
     extract_and_log_metrics "CREATE"
 
@@ -112,7 +112,7 @@ run_benchmarks() {
     # 3. CREATE2
     drop_caches
     /usr/bin/time -f "CREATE2 wall: %e sec, user: %U, sys: %S, RAM: %M KB" -a -o "$TMP_LOG" \
-        "$TREEBALL_BIN" create "$root" "$tar2" > /dev/null
+        "$TREEBALL_BIN" create "$root" "$tar2" --exclude='random1' --exclude='random2' --exclude='random3' > /dev/null
     ls -lh "$tar2" | awk '{print "CREATE2 size: " $5}' >> "$TMP_LOG"
     extract_and_log_metrics "CREATE2"
 
@@ -120,7 +120,7 @@ run_benchmarks() {
     drop_caches
     set +e
     /usr/bin/time -f "DIFF TAR/TAR wall: %e sec, user: %U, sys: %S, RAM: %M KB" -a -o "$TMP_LOG" \
-        "$TREEBALL_BIN" diff "$tar1" "$tar2" "$diff" --tmpdir="$TMP_DIR" &> /dev/null
+        "$TREEBALL_BIN" diff "$tar1" "$tar2" "$diff" --tmpdir="$TMP_DIR" --exclude='random1' --exclude='random2' --exclude='random3' &> /dev/null
     set -e
     extract_and_log_metrics "DIFF TAR/TAR"
 
@@ -128,7 +128,7 @@ run_benchmarks() {
     drop_caches
     set +e
     /usr/bin/time -f "DIFF TAR/FOLDER wall: %e sec, user: %U, sys: %S, RAM: %M KB" -a -o "$TMP_LOG" \
-        "$TREEBALL_BIN" diff "$tar1" "$root" "$diff" --tmpdir="$TMP_DIR" &> /dev/null
+        "$TREEBALL_BIN" diff "$tar1" "$root" "$diff" --tmpdir="$TMP_DIR" --exclude='random1' --exclude='random2' --exclude='random3' &> /dev/null
     set -e
     extract_and_log_metrics "DIFF TAR/FOLDER"
 
@@ -136,7 +136,7 @@ run_benchmarks() {
     drop_caches
     set +e
     /usr/bin/time -f "DIFF FOLDER/FOLDER wall: %e sec, user: %U, sys: %S, RAM: %M KB" -a -o "$TMP_LOG" \
-        "$TREEBALL_BIN" diff "$root" "$root" "$diff" --tmpdir="$TMP_DIR" &> /dev/null
+        "$TREEBALL_BIN" diff "$root" "$root" "$diff" --tmpdir="$TMP_DIR" --exclude='random1' --exclude='random2' --exclude='random3' &> /dev/null
     set -e
     extract_and_log_metrics "DIFF FOLDER/FOLDER"
 
