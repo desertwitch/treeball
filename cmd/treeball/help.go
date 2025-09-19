@@ -43,11 +43,14 @@ or other relevant operational output will be printed to standard error (stderr) 
 The command will return with an exit code 0 in case of success; an exit code 2 for any errors.`
 
 	createExample = `
-# Create a tarball of the current directory:
+# Archive the current directory:
 treeball create . output.tar.gz
 
-# Create a tarball excluding specific directories:
-treeball create /mnt/user user.tar.gz --exclude=/mnt/user/appdata --exclude=/mnt/user/cache`
+# Archive a directory with exclusions:
+treeball create /mnt/data output.tar.gz --exclude='src/**/main.go'
+
+# Archive a directory with exclusions from a file:
+treeball create /mnt/data output.tar.gz --excludes-from=./excludes.txt`
 
 	diffHelpShort = "Create a diff tarball from any two pre-existing sources"
 
@@ -80,11 +83,11 @@ treeball diff old.tar.gz new.tar.gz diff.tar.gz
 # Basic usage of the command with directory comparison:
 treeball diff old.tar.gz /mnt/new diff.tar.gz
 
-# Use of a specific on-disk temporary location for large tarballs:
-treeball diff old.tar.gz new.tar.gz diff.tar.gz --tmpdir=/mnt/largedisk
+# Just see the diff in the terminal (without file output):
+treeball diff old.tar.gz new.tar.gz /dev/null
 
-# Inspecting the differences only within the current terminal (on stdout):
-treeball diff old.tar.gz new.tar.gz /dev/null`
+# Use of an on-disk temporary directory (for massive archives):
+treeball diff old.tar.gz new.tar.gz diff.tar.gz --tmpdir=/mnt/largedisk`
 
 	listHelpShort = "List the paths contained in a tarball (sorted by default)"
 
@@ -105,12 +108,12 @@ data can peak at multiple gigabytes. If none is provided, the intelligent mechan
 choose one for you, falling back to the system's default temporary file location on failure.`
 
 	listExample = `
-# List as sorted the contents of a tarball:
-treeball list input.tar.gz
+# List the contents as sorted (default):
+treeball list archive.tar.gz
 
-# Preserve the original archive order in the listing:
-treeball list input.tar.gz --sort=false
+# List the contents in their original archive order:
+treeball list archive.tar.gz --sort=false
 
-# Use a specific on-disk temporary directory for large archives:
-treeball list input.tar.gz --tmpdir=/mnt/largedisk`
+# Use of an on-disk temporary directory (for massive archives):
+treeball list archive.tar.gz --tmpdir=/mnt/largedisk`
 )
