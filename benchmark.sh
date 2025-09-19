@@ -1,14 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-TREEBALL_BIN="./treeball"
-BASE_DIR="/mnt/treeball_xfs"
-RESULTS="./treeball_bench.txt"
-SIZES=(5000 10000 50000 100000 500000 1000000 5000000)
-TMP_LOG="./treeball_bench_tmp.txt"
+read -pr "Enter TREEBALL_BIN path [./treeball]: " input
+TREEBALL_BIN="${input:-./treeball}"
 
-mkdir -p "$BASE_DIR"
-> "$RESULTS"
+read -pr "Enter RESULTS file path [./treeball_benchmark.txt]: " input
+RESULTS="${input:-./treeball_benchmark.txt}"
+
+read -pr "Enter TMP_LOG file path [./treeball_benchmark_tmp.txt]: " input
+TMP_LOG="${input:-./treeball_benchmark_tmp.txt}"
+
+read -pr "Enter BENCH_DIR path [./treeball_benchmark]: " input
+BENCH_DIR="${input:-./treeball_benchmark}"
+
+read -pr "Enter TMP_DIR path [./treeball_benchmark_tmp]: " input
+TMP_DIR="${input:-./treeball_benchmark_tmp}"
+
+read -pr "Enter SIZES (space-separated) [5000 10000 50000 100000 500000 1000000 5000000]: " input
+SIZES=(${input:-5000 10000 50000 100000 500000 1000000 5000000})
+
+mkdir -p "$BENCH_DIR"
+mkdir -p "$TMP_DIR"
 
 log() {
     echo "[$(date +'%H:%M:%S')] $*" >&2
@@ -45,30 +57,12 @@ extract_and_log_metrics() {
 }
 
 create_dummy_tree() {
-    local dir=$1
-    local count=$2
-    local files_per_dir=100
-
-    local dirs_needed=$((count / files_per_dir + 1))
-
-    for ((d=0; d<dirs_needed; d++)); do
-        local level1="dept_$(printf "%02d" $((d / 1000)))"
-        local level2="proj_$(printf "%03d" $((d / 100)))"
-        local level3="batch_$(printf "%04d" $((d / 10)))"
-        local level4="group_$(printf "%06d" $d)"
-
-        local subdir="$dir/$level1/$level2/$level3/$level4"
-        mkdir -p "$subdir"
-
-        for ((f=0; f<files_per_dir && d*files_per_dir+f<count; f++)); do
-            touch "$subdir/data_$(printf "%06d" $f).txt"
-        done
-    done
+    go run ./tools/create_bench_tree.go "$1" "$2"
 }
 
 run_benchmarks() {
     local count=$1
-    local root="$BASE_DIR/root_$count"
+    local root="$BENCH_DIR/root_$count"
     local tar1="tree_${count}_a.tar.gz"
     local tar2="tree_${count}_b.tar.gz"
     local diff="diff_${count}.tar.gz"
@@ -97,19 +91,37 @@ run_benchmarks() {
     ls -lh "$tar2" | awk '{print "CREATE2 size: " $5}' >> "$TMP_LOG"
     extract_and_log_metrics "CREATE2"
 
-    # 4. DIFF (ignore exit 1)
+    # 4. DIFF - TAR/TAR (ignore exit 1)
     drop_caches
     set +e
-    /usr/bin/time -f "DIFF wall: %e sec, user: %U, sys: %S, RAM: %M KB" -a -o "$TMP_LOG" \
-        "$TREEBALL_BIN" diff "$tar1" "$tar2" "$diff" --tmpdir="$BASE_DIR" &> /dev/null
+    /usr/bin/time -f "DIFF TAR/TAR wall: %e sec, user: %U, sys: %S, RAM: %M KB" -a -o "$TMP_LOG" \
+        "$TREEBALL_BIN" diff "$tar1" "$tar2" "$diff" --tmpdir="$TMP_DIR" &> /dev/null
     set -e
-    ls -lh "$diff" | awk '{print "DIFF size: " $5}' >> "$TMP_LOG"
-    extract_and_log_metrics "DIFF"
+    ls -lh "$diff" | awk '{print "DIFF TAR/TAR size: " $5}' >> "$TMP_LOG"
+    extract_and_log_metrics "DIFF TAR/TAR"
 
-    # 5. LIST
+    # 5. DIFF - TAR/FOLDER (ignore exit 1)
+    drop_caches
+    set +e
+    /usr/bin/time -f "DIFF TAR/FOLDER wall: %e sec, user: %U, sys: %S, RAM: %M KB" -a -o "$TMP_LOG" \
+        "$TREEBALL_BIN" diff "$tar1" "$root" "$diff" --tmpdir="$TMP_DIR" &> /dev/null
+    set -e
+    ls -lh "$diff" | awk '{print "DIFF TAR/FOLDER size: " $5}' >> "$TMP_LOG"
+    extract_and_log_metrics "DIFF TAR/FOLDER"
+
+    # 6. DIFF - FOLDER/FOLDER (ignore exit 1)
+    drop_caches
+    set +e
+    /usr/bin/time -f "DIFF FOLDER/FOLDER wall: %e sec, user: %U, sys: %S, RAM: %M KB" -a -o "$TMP_LOG" \
+        "$TREEBALL_BIN" diff "$root" "$root" "$diff" --tmpdir="$TMP_DIR" &> /dev/null
+    set -e
+    ls -lh "$diff" | awk '{print "DIFF FOLDER/FOLDER size: " $5}' >> "$TMP_LOG"
+    extract_and_log_metrics "DIFF FOLDER/FOLDER"
+
+    # 7. LIST
     drop_caches
     /usr/bin/time -f "LIST wall: %e sec, user: %U, sys: %S, RAM: %M KB" -a -o "$TMP_LOG" \
-        "$TREEBALL_BIN" list "$tar2" --tmpdir="$BASE_DIR" > /dev/null
+        "$TREEBALL_BIN" list "$tar2" --tmpdir="$TMP_DIR" > /dev/null
     extract_and_log_metrics "LIST"
 
     avg_len=$(find "$root" -type f | awk '{ total += length($0); count++ } END { if (count > 0) print int(total/count); else print 0 }')
@@ -128,8 +140,16 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
-echo "CPU cores: $(nproc)" >> "$RESULTS"
-echo "Filesystem type: $(df -T "$BASE_DIR" | awk 'NR==2 {print $2}')" >> "$RESULTS"
+echo "--- $(date +'%H:%M:%S') ---" | tee -a "$RESULTS"
+
+echo "TREEBALL_BIN=$TREEBALL_BIN" | tee -a "$RESULTS"
+echo "BENCH_DIR=$BENCH_DIR" | tee -a "$RESULTS"
+echo "TMP_LOG=$TMP_LOG" | tee -a "$RESULTS"
+echo "SIZES=(${SIZES[*]})" | tee -a "$RESULTS"
+echo "" | tee -a "$RESULTS"
+
+echo "CPU cores: $(nproc)" | tee -a "$RESULTS"
+echo "Filesystem type: $(df -T "$BENCH_DIR" | awk 'NR==2 {print $2}')" | tee -a "$RESULTS"
 
 check_treeball
 
@@ -138,5 +158,8 @@ for size in "${SIZES[@]}"; do
     run_benchmarks "$size"
 done
 
-log "Done. Results saved to $RESULTS."
+echo "Benchmark completed for: (${SIZES[*]})." | tee -a "$RESULTS"
+echo "---------------------------" | tee -a "$RESULTS"
+
+log "Done. Results saved to: $RESULTS."
 cat "$RESULTS"

@@ -86,7 +86,7 @@ func isExcluded(path string, isDir bool, excludes []string) (bool, error) {
 
 		matched, err := doublestar.Match(pattern, path)
 		if err != nil {
-			return false, err
+			return false, fmt.Errorf("failed to match: %w", err)
 		}
 		if matched {
 			if needDirMatch && !isDir {
@@ -123,7 +123,7 @@ func (prog *Program) mergeExcludes(excludeSlice []string, excludeFile string) ([
 		}
 
 		if err := scanner.Err(); err != nil {
-			return nil, fmt.Errorf("error reading exclude file: %w", err)
+			return nil, fmt.Errorf("failed reading exclude file: %w", err)
 		}
 	}
 
@@ -171,11 +171,11 @@ func (prog *Program) multiPathStream(ctx context.Context, path string, sort bool
 		paths, errs := prog.fsPathStream(ctx, path, sort, excludes)
 
 		return paths, errs, nil
-	} else {
-		paths, errs := prog.tarPathStream(ctx, path, sort, excludes)
-
-		return paths, errs, nil
 	}
+
+	paths, errs := prog.tarPathStream(ctx, path, sort, excludes)
+
+	return paths, errs, nil
 }
 
 func (prog *Program) fsPathStream(ctx context.Context, path string, sort bool, excludes []string) (<-chan string, <-chan error) {
