@@ -11,12 +11,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// A helper filesystem for tests to simulate filesystem errors.
 type failingFs struct {
 	afero.Fs
 	failMkdirAll bool
 	failCreate   bool
 }
 
+// A helper function for tests to simulate folder creation failure.
 func (f *failingFs) MkdirAll(path string, perm os.FileMode) error {
 	if f.failMkdirAll {
 		return errors.New("simulated mkdirall error")
@@ -25,6 +27,7 @@ func (f *failingFs) MkdirAll(path string, perm os.FileMode) error {
 	return f.Fs.MkdirAll(path, perm) //nolint:wrapcheck
 }
 
+// A helper function for tests to simulate file creation failure.
 func (f *failingFs) Create(name string) (afero.File, error) {
 	if f.failCreate {
 		return nil, errors.New("simulated create error")
