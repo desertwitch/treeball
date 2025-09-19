@@ -41,8 +41,10 @@ drop_caches() {
         if sudo -n true 2>/dev/null; then
             sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches'
         else
+            echo ""
             echo "[WARNING] Need sudo to drop kernel caches..." >&2
             sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches'
+            echo ""
         fi
     fi
 }
