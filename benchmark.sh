@@ -158,6 +158,7 @@ echo "CPU cores: $(nproc)" | tee -a "$RESULTS"
 echo "Filesystem type: $(df -T "$BENCH_DIR" | awk 'NR==2 {print $2}')" | tee -a "$RESULTS"
 check_treeball
 
+echo ""
 log "Starting benchmarks..."
 
 for size in "${SIZES[@]}"; do
@@ -165,7 +166,7 @@ for size in "${SIZES[@]}"; do
 done
 
 echo "" | tee -a "$RESULTS"
-echo "===========================" | tee -a "$RESULTS"
+echo "BENCHMARK COMPLETE" | tee -a "$RESULTS"
 echo "" | tee -a "$RESULTS"
 
 cat "$RESULTS"
