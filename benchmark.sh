@@ -23,6 +23,7 @@ SIZES=(${input:-5000 10000 50000 100000 500000 1000000 5000000})
 
 mkdir -p "$BENCH_DIR"
 mkdir -p "$TMP_DIR"
+> "$RESULTS"
 
 log() {
     echo "[$(date +'%H:%M:%S')] $*" >&2
@@ -139,6 +140,7 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
+echo ""
 echo "===========================" | tee -a "$RESULTS"
 echo "=== $(date) ===" | tee -a "$RESULTS"
 echo "===========================" | tee -a "$RESULTS"
