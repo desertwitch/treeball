@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-export PATH=$PATH:/usr/local/go/bin
-
 read -r -p "Enter TREEBALL_BIN path [./treeball]: " input
 TREEBALL_BIN="${input:-./treeball}"
 
@@ -21,6 +19,12 @@ TMP_DIR="${input:-./treeball_benchmark_tmp}"
 read -r -p "Enter SIZES (space-separated) [5000 10000 50000 100000 500000 1000000 5000000]: " input
 SIZES=(${input:-5000 10000 50000 100000 500000 1000000 5000000})
 
+cleanup() {
+    rm -f "$TMP_LOG"
+    rm -rf "$BENCH_DIR"/trbb_* "$TMP_DIR"/trbb_*
+}
+trap cleanup EXIT
+
 mkdir -p "$BENCH_DIR"
 mkdir -p "$TMP_DIR"
 > "$RESULTS"
@@ -31,7 +35,7 @@ log() {
 
 drop_caches() {
     sync
-    echo 3 > /proc/sys/vm/drop_caches
+    sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches'
 }
 
 check_treeball() {
@@ -65,10 +69,10 @@ create_dummy_tree() {
 
 run_benchmarks() {
     local count=$1
-    local root="$BENCH_DIR/root_$count"
-    local tar1="$TMP_DIR/tree_${count}_a.tar.gz"
-    local tar2="$TMP_DIR/tree_${count}_b.tar.gz"
-    local diff="$TMP_DIR/diff_${count}.tar.gz"
+    local root="$BENCH_DIR/trbb_$count"
+    local tar1="$TMP_DIR/trbb_${count}_a.tar.gz"
+    local tar2="$TMP_DIR/trbb_${count}_b.tar.gz"
+    local diff="$TMP_DIR/trbb_diff_${count}.tar.gz"
 
     log "Generating directory with $count files..."
     rm -rf "$root"
@@ -135,10 +139,10 @@ run_benchmarks() {
     rm -rf "$root"
 }
 
-if [[ $EUID -ne 0 ]]; then
-  echo "This script must be run as root (to drop kernel caches)." >&2
-  exit 1
-fi
+command -v go >/dev/null 2>&1 || {
+    echo "Go compiler not found in PATH" >&2
+    exit 1
+}
 
 echo ""
 echo "===========================" | tee -a "$RESULTS"
@@ -150,7 +154,7 @@ echo "TREEBALL_BIN=$TREEBALL_BIN" | tee -a "$RESULTS"
 echo "RESULTS=$RESULTS" | tee -a "$RESULTS"
 echo "TMP_LOG=$TMP_LOG" | tee -a "$RESULTS"
 echo "BENCH_DIR=$BENCH_DIR" | tee -a "$RESULTS"
-echo "TMP_DIR=$TMP_DIR_DIR" | tee -a "$RESULTS"
+echo "TMP_DIR=$TMP_DIR" | tee -a "$RESULTS"
 echo "SIZES=(${SIZES[*]})" | tee -a "$RESULTS"
 echo "" | tee -a "$RESULTS"
 
