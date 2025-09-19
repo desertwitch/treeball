@@ -123,11 +123,15 @@ run_benchmarks() {
         "$TREEBALL_BIN" list "$tar2" --tmpdir="$TMP_DIR" > /dev/null
     extract_and_log_metrics "LIST"
 
+    echo "" >> "$RESULTS"
+
     avg_len=$(find "$root" -type f | awk '{ total += length($0); count++ } END { if (count > 0) print int(total/count); else print 0 }')
     echo "Average path length: ${avg_len} characters" >> "$RESULTS"
 
     max_depth=$(find "$root" -type f -printf '%d\n' | sort -n | tail -1)
     echo "Maximum path depth: ${max_depth} levels" >> "$RESULTS"
+
+    echo "" >> "$RESULTS"
 
     cat "$TMP_LOG" >> "$RESULTS"
     rm -f "$tar1" "$tar2" "$diff" "$TMP_LOG"
