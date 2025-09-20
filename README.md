@@ -46,7 +46,7 @@ Directory trees are reshaped as artifacts - something you can archive, compare, 
 
 #### Core commands:
 - **Create** a tree tarball from any directory tree
-- **Diff** two tree tarballs to detect added/removed paths
+- **Diff** two tree sources to detect added/removed paths
 - **List** the contents of a tree tarball (sorted or original order)
 
 #### Operational strengths:
@@ -62,37 +62,44 @@ Directory trees are reshaped as artifacts - something you can archive, compare, 
 Build a `.tar.gz` archive from a directory tree.
 
 ```bash
-treeball create <root-folder> <output.tar.gz> [--exclude=PATH --exclude=PATH...]
+treeball create <root-folder> <output.tar.gz> [--exclude=PATTERN] [--excludes-from=PATH]
 ```
-
-Beware `--exclude` paths must be written in the same absolute/relative form as the `<root-folder>`.
 
 **Examples:**
 
 ```bash
 # Archive the current directory:
-treeball create . tree.tar.gz
+treeball create . output.tar.gz
 
 # Archive a directory with exclusions:
-treeball create /data/full archive.tar.gz --exclude=/data/full/tmp --exclude=/data/full/.git
+treeball create /mnt/data output.tar.gz --exclude='src/**/main.go'
+
+# Archive a directory with exclusions from a file:
+treeball create /mnt/data output.tar.gz --excludes-from=./excludes.txt
 ```
 
 #### `treeball diff`
 
-Compare two tarballs and create a diff archive reflecting structural changes (added/removed files and directories).
+Compare two sources and create a diff archive reflecting structural changes (added/removed files and directories).
 
 ```bash
-treeball diff <old.tar.gz> <new.tar.gz> <diff.tar.gz> [--tmpdir=PATH]
+treeball diff <old> <new> <diff.tar.gz> [--tmpdir=PATH] [--exclude=PATTERN] [--excludes-from=PATH] 
 ```
+
+The command supports sources as either an existing directory or an existing tarball (`.tar.gz`).  
+This means you can compare tar vs. tar, tar vs. dir, dir vs. tar and dir vs. dir respectively.  
 
 **Examples:**
 
 ```bash
 # Basic usage of the command:
-treeball diff base.tar.gz updated.tar.gz changes.tar.gz
+treeball diff old.tar.gz new.tar.gz diff.tar.gz
+
+# Basic usage of the command with directory comparison:
+treeball diff old.tar.gz /mnt/new diff.tar.gz
 
 # Just see the diff in the terminal (without file output):
-treeball diff base.tar.gz updated.tar.gz /dev/null
+treeball diff old.tar.gz new.tar.gz /dev/null
 
 # Use of an on-disk temporary directory (for massive archives):
 treeball diff old.tar.gz new.tar.gz diff.tar.gz --tmpdir=/mnt/largedisk
@@ -110,26 +117,37 @@ Beware the `diff` archive contains synthetic `+++` and `---` directories to refl
 List the contents of a `.tar.gz` tree archive (sorted or unsorted).
 
 ```bash
-treeball list <input.tar.gz> [--sort=false] [--tmpdir=PATH]
+treeball list <input.tar.gz> [--tmpdir=PATH] [--sort=false]
 ```
 
 **Examples:**
 
 ```bash
 # List the contents as sorted (default):
-treeball list archive.tar.gz
+treeball list input.tar.gz
 
 # List the contents in their original archive order:
-treeball list archive.tar.gz --sort=false
+treeball list input.tar.gz --sort=false
 
 # Use of an on-disk temporary directory (for massive archives):
-treeball list archive.tar.gz --tmpdir=/mnt/largedisk
+treeball list input.tar.gz --tmpdir=/mnt/largedisk
 ```
 
 > **Performance considerations with massive archives:**
 > The external sorting mechanism may off-load excess data to on-disk locations (controllable with `--tmpdir`) to conserve RAM.
 > Ensure that a suitable location is provided (in terms of speed and available space), as such data can peak at multiple gigabytes.
 > If none is provided, the intelligent mechanism will try choose one for you, falling back to the system's default temporary file location.
+
+### EXCLUDE PATTERNS
+
+Exclusion patterns are expected to always be relative to the given input directory tree.  
+This means, passing `/mnt/user` to a command, `a.txt` would exclude `/mnt/user/a.txt`.  
+
+`--exclude` arguments can be repeated multiple times, and/or a `--excludes-from` file be loaded.  
+If either type of argument is given, all exclusion patterns are merged together at program runtime.  
+
+All exclusion patterns are expected to follow the `doublestar`-format:  
+https://github.com/bmatcuk/doublestar?tab=readme-ov-file#patterns
 
 ### ADVANCED OPTIONS
 
@@ -183,23 +201,23 @@ make
 
 ### BENCHMARKS
 
-Benchmarks demonstrate consistent performance across small to large directory trees.
+Benchmarks demonstrate consistent [performance](./PERFORMANCE.md) across small to large directory trees.
 
 | Files  | CREATE (Time / RAM / CPU)    | DIFF (Time / RAM / CPU)      | LIST (Time / RAM / CPU)      | Treeball Size |
 |--------|------------------------------|------------------------------|------------------------------|---------------|
-| 10K    | 0.04 s / 26.63 MB / 200%     | 0.04 s / 14.73 MB / 175%     | 0.03 s / 13.02 MB / 100%     | 49 KB         |
-| 500K   | 0.95 s / 56.55 MB / 425%     | 1.05 s / 83.87 MB / 255%     | 0.95 s / 44.42 MB / 148%     | 2.4 MB        |
-| **1M** | **1.94 s / 57.23 MB / 422%** | **1.97 s / 81.84 MB / 253%** | **1.87 s / 43.13 MB / 151%** | **4.8 MB**    |
-| 5M     | 12.99 s / 62.99 MB / 317%    | 9.97 s / 82.31 MB / 252%     | 9.32 s / 47.24 MB / 151%     | 24 MB         |
-| 10M    | 29.78 s / 58.88 MB / 277%    | 19.37 s / 84.13 MB / 260%    | 18.80 s / 45.23 MB / 150%    | 48 MB         |
+| 10K    | 0.04 s / 29.44 MB / 200%     | 0.04 s / 16.58 MB / 150%     | 0.04 s / 13.53 MB / 75%      | 49 KB         |
+| 500K   | 0.94 s / 55.47 MB / 435%     | 1.39 s / 88.57 MB / 243%     | 1.31 s / 45.94 MB / 140%     | 2.4 MB        |
+| **1M** | **1.77 s / 58.91 MB / 469%** | **2.44 s / 88.16 MB / 263%** | **2.17 s / 46.23 MB / 141%** | **4.8 MB**    |
+| 5M     | 12.99 s / 62.83 MB / 321%    | 11.81 s / 84.08 MB / 250%    | 10.74 s / 46.04 MB / 146%    | 24 MB         |
+| 10M    | 29.27 s / 59.39 MB / 291%    | 22.92 s / 86.21 MB / 256%    | 22.12 s / 46.03 MB / 140%    | 48 MB         |
 
 > CPU usage above 100% indicates that the program is **multi-threaded** and effectively parallelized.  
 > RAM usage per million files drops significantly with scale due to **external sorting** and streaming data.  
-> [Stress tests](./PERFORMANCE.md) with trees of **up to 400 million files** have shown continued low resource consumption trends.  
+> Stress tests with trees of **up to 500 million files** have shown continued [low resource consumption](./PERFORMANCE.md) trends.  
 
 **Benchmark Environment**:  
 Average path length: ~80 characters / Maximum directory depth: 5 levels  
-Default settings / `--tmpdir` (on same disk) / Maximum compression level (9)  
+3x `--exclude` / `--tmpdir` (on same disk) / Maximum compression level (9)  
 i5-12600K 3.69 GHz (16 cores), 32GB RAM, 980 Pro NVMe (EXT4), Ubuntu 24.04.2  
 
 ### SECURITY, CONTRIBUTIONS, AND LICENSE
