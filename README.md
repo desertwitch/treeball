@@ -215,6 +215,11 @@ Benchmarks demonstrate consistent [performance](./PERFORMANCE.md) across small t
 > RAM usage per million files drops significantly with scale due to **external sorting** and streaming data.  
 > Stress tests with trees of **up to 500 million files** have shown continued [low resource consumption](./PERFORMANCE.md) trends.  
 
+**Benchmark Environment**:  
+Average path length: ~80 characters / Maximum directory depth: 5 levels  
+3x `--exclude` / `--tmpdir` (on same disk) / Maximum compression level (9)  
+i5-12600K 3.69 GHz (16 cores), 32GB RAM, 980 Pro NVMe (EXT4), Ubuntu 24.04.2  
+
 ### SECURITY, CONTRIBUTIONS, AND LICENSE
 
 Please report any issues via the GitHub Issues tracker. While no major features are currently planned, contributions are welcome. Contributions should be submitted through GitHub and, if possible, should pass the test suite and comply with the project's linting rules. All code is licensed under the MIT license.
