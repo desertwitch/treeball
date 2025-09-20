@@ -213,7 +213,7 @@ Benchmarks demonstrate consistent [performance](./PERFORMANCE.md) across small t
 
 > CPU usage above 100% indicates that the program is **multi-threaded** and effectively parallelized.  
 > RAM usage per million files drops significantly with scale due to **external sorting** and streaming data.  
-> Stress tests with trees of **up to 400 million files** have shown continued [low resource consumption](./PERFORMANCE.md) trends.  
+> Stress tests with trees of **up to 500 million files** have shown continued [low resource consumption](./PERFORMANCE.md) trends.  
 
 ### SECURITY, CONTRIBUTIONS, AND LICENSE
 
