@@ -187,7 +187,7 @@ func (prog *Program) fsPathStream(ctx context.Context, path string, sort bool, e
 
 		if err := prog.fsWalker.WalkDir(path, func(p string, d fs.DirEntry, err error) error {
 			if err := ctx.Err(); err != nil {
-				return ctx.Err()
+				return fmt.Errorf("failed to walk filesystem: %w", err)
 			}
 
 			if err != nil {
@@ -258,7 +258,7 @@ func (prog *Program) tarPathStream(ctx context.Context, path string, sort bool, 
 		tr := tar.NewReader(gz)
 		for {
 			if err := ctx.Err(); err != nil {
-				errs <- ctx.Err()
+				errs <- fmt.Errorf("failed to stream from tar: %w", err)
 
 				return
 			}

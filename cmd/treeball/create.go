@@ -46,7 +46,7 @@ func (prog *Program) Create(ctx context.Context, input string, output string, ex
 
 	if err := prog.fsWalker.WalkDir(input, func(path string, d fs.DirEntry, err error) error {
 		if err := ctx.Err(); err != nil {
-			return ctx.Err()
+			return fmt.Errorf("failed to walk filesystem: %w", err)
 		}
 
 		if err != nil {
