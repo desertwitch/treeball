@@ -111,7 +111,6 @@ func (prog *Program) mergeExcludes(excludeSlice []string, excludeFile string) ([
 		defer file.Close()
 
 		scanner := bufio.NewScanner(file)
-
 		for scanner.Scan() {
 			line := strings.TrimSpace(scanner.Text())
 
