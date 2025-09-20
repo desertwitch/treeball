@@ -79,9 +79,9 @@ func isExcluded(path string, isDir bool, excludes []string) (bool, error) {
 	path = filepath.ToSlash(filepath.Clean(path))
 
 	for _, rawPattern := range excludes {
-		needDirMatch := strings.HasSuffix(rawPattern, "/")
 		pattern := filepath.ToSlash(rawPattern)
 
+		needDirMatch := strings.HasSuffix(pattern, "/")
 		pattern = strings.TrimPrefix(strings.TrimSuffix(pattern, "/"), "/")
 
 		matched, err := doublestar.Match(pattern, path)
