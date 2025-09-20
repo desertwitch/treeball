@@ -205,11 +205,11 @@ Benchmarks demonstrate consistent [performance](./PERFORMANCE.md) across small t
 
 | Files  | CREATE (Time / RAM / CPU)    | DIFF (Time / RAM / CPU)      | LIST (Time / RAM / CPU)      | Treeball Size |
 |--------|------------------------------|------------------------------|------------------------------|---------------|
-| 10K    | 0.04 s / 26.63 MB / 200%     | 0.04 s / 14.73 MB / 175%     | 0.03 s / 13.02 MB / 100%     | 49 KB         |
-| 500K   | 0.95 s / 56.55 MB / 425%     | 1.05 s / 83.87 MB / 255%     | 0.95 s / 44.42 MB / 148%     | 2.4 MB        |
-| **1M** | **1.94 s / 57.23 MB / 422%** | **1.97 s / 81.84 MB / 253%** | **1.87 s / 43.13 MB / 151%** | **4.8 MB**    |
-| 5M     | 12.99 s / 62.99 MB / 317%    | 9.97 s / 82.31 MB / 252%     | 9.32 s / 47.24 MB / 151%     | 24 MB         |
-| 10M    | 29.78 s / 58.88 MB / 277%    | 19.37 s / 84.13 MB / 260%    | 18.80 s / 45.23 MB / 150%    | 48 MB         |
+| 10K    | 0.04 s / 29.44 MB / 200%     | 0.04 s / 16.58 MB / 150%     | 0.04 s / 13.53 MB / 75%      | 49 KB         |
+| 500K   | 0.94 s / 55.47 MB / 435%     | 1.39 s / 88.57 MB / 243%     | 1.31 s / 45.94 MB / 140%     | 2.4 MB        |
+| **1M** | **1.77 s / 58.91 MB / 469%** | **2.44 s / 88.16 MB / 263%** | **2.17 s / 46.23 MB / 141%** | **4.8 MB**    |
+| 5M     | 12.99 s / 62.83 MB / 321%    | 11.81 s / 84.08 MB / 250%    | 10.74 s / 46.04 MB / 146%    | 24 MB         |
+| 10M    | 29.27 s / 59.39 MB / 291%    | 22.92 s / 86.21 MB / 256%    | 22.12 s / 46.03 MB / 140%    | 48 MB         |
 
 > CPU usage above 100% indicates that the program is **multi-threaded** and effectively parallelized.  
 > RAM usage per million files drops significantly with scale due to **external sorting** and streaming data.  
