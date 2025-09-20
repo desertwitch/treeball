@@ -168,7 +168,7 @@ func Test_Program_Create_CtxCancel_Error(t *testing.T) {
 }
 
 // Expectation: An invalid configuration should raise the appropriate error and the output file be removed.
-func Test_Program_Create_InvalidCompressorConfig_Error(t *testing.T) {
+func Test_Program_Create_InvalidCompressorBlockCount_Error(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
 	require.NoError(t, afero.WriteFile(fs, "/src/a.txt", []byte("a"), 0o644))
@@ -185,7 +185,7 @@ func Test_Program_Create_InvalidCompressorConfig_Error(t *testing.T) {
 }
 
 // Expectation: An invalid configuration should raise the appropriate error and the output file be removed.
-func Test_Program_Create_InvalidCompressorConfig2_Error(t *testing.T) {
+func Test_Program_Create_InvalidCompressorBlockSize_Error(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
 	require.NoError(t, afero.WriteFile(fs, "/src/a.txt", []byte("a"), 0o644))
@@ -202,7 +202,7 @@ func Test_Program_Create_InvalidCompressorConfig2_Error(t *testing.T) {
 }
 
 // Expectation: An invalid configuration should raise the appropriate error and the output file be removed.
-func Test_Program_Create_InvalidCompressorConfig3_Error(t *testing.T) {
+func Test_Program_Create_InvalidCompressorCompLevel_Error(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
 	require.NoError(t, afero.WriteFile(fs, "/src/a.txt", []byte("a"), 0o644))
