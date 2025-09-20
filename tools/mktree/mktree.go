@@ -144,6 +144,7 @@ func main() {
 	for {
 		select {
 		case <-sigChan:
+			fmt.Fprintf(os.Stderr, "interrupting...\n")
 			cancel()
 		case err := <-errChan:
 			if err != nil {
