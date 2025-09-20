@@ -86,7 +86,7 @@ func isExcluded(path string, isDir bool, excludes []string) (bool, error) {
 
 		matched, err := doublestar.Match(pattern, path)
 		if err != nil {
-			return false, fmt.Errorf("failed to match: %w", err)
+			return false, fmt.Errorf("invalid exclude pattern: %w", err)
 		}
 		if matched {
 			if needDirMatch && !isDir {
@@ -205,7 +205,7 @@ func (prog *Program) fsPathStream(ctx context.Context, path string, sort bool, e
 			}
 
 			if excluded, err := isExcluded(relPath, d.IsDir(), excludes); err != nil {
-				return fmt.Errorf("invalid exclude pattern: %w", err)
+				return fmt.Errorf("failed to check for exclusion: %w", err)
 			} else if excluded && d.IsDir() {
 				return filepath.SkipDir
 			} else if excluded {
@@ -276,7 +276,7 @@ func (prog *Program) tarPathStream(ctx context.Context, path string, sort bool, 
 			}
 
 			if excluded, err := isExcluded(hdr.Name, strings.HasSuffix(hdr.Name, "/"), excludes); err != nil {
-				errs <- fmt.Errorf("invalid exclude pattern: %w", err)
+				errs <- fmt.Errorf("failed to check for exclusion: %w", err)
 
 				return
 			} else if !excluded {
