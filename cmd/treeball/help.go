@@ -8,7 +8,7 @@ const (
 It treats directory trees as artifacts that can be archived, compared, and extracted.
 Entire filesystem structures are replicated into tarballs, with the actual files being
 replaced with zero byte dummy placeholders, but preserving their exact paths. This allows
-for browsable inventory-type backups of e.g. media libraries without actual file contents.
+for browsable inventory-type backups of e.g. media libraries without file content overhead.
 
 The program works efficiently even with millions of files, intelligently off-loading data to
 disk when system resources would otherwise become too constrained. It supports these commands:
