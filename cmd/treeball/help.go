@@ -5,10 +5,10 @@ const (
 
 	rootHelpLong = `treeball creates, diffs, and lists directory trees as archives.
 
-It treats directory trees as artifacts that can be archived, compared, and extracted.
-Entire filesystem structures are replicated into tarballs, with the actual files being
-replaced with zero byte dummy placeholders, but preserving their exact paths. This allows
-for browsable inventory-type backups of e.g. media libraries without file content overhead.
+It preserves directory trees as compressed archives, replacing all files with zero-byte
+placeholder files. This creates lightweight tarballs that are portable, navigable, and
+diffable. Think of browsable inventory-type backups of e.g. media libraries, but without
+overhead of preserving the file contents.
 
 The program works efficiently even with millions of files, intelligently off-loading data to
 disk when system resources would otherwise become too constrained. It supports these commands:
@@ -33,7 +33,7 @@ For detailed help on a specific command, run:
 	createHelpLong = `Create a tarball representing any given directory tree.
 
 The command will recursively include all files and directories under <root-folder>.
-Archived paths will be presented as zero byte dummy files, preserving their exact names.
+Files will be compressed as zero-byte placeholder files with their names preserved.
 
 Excludes are expected as relative to <root-folder> and following 'doublestar' format:
 https://github.com/bmatcuk/doublestar?tab=readme-ov-file#patterns

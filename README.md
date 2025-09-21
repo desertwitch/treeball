@@ -21,7 +21,7 @@
 
 **treeball creates, diffs, and lists directory trees as archives.**
 
-`treeball` is a command-line utility for preserving directory trees as compressed archives, **replacing all files with zero-byte file placeholders**. This creates lightweight tarballs that are portable, navigable, and diffable. Think of **browsable inventory-type backups** of e.g. media libraries, but without overhead of preserving the file contents.
+`treeball` is a command-line utility for preserving directory trees as compressed archives, **replacing all files with zero-byte placeholder files**. This creates lightweight tarballs that are portable, navigable, and diffable. Think of **browsable inventory-type backups** of e.g. media libraries, but without overhead of preserving the file contents.
 
 ### RATIONALE
 
@@ -32,11 +32,11 @@ Wouldn't it be nice to just browse that as if it were your regular filesystem - 
 `treeball` solves this by converting directory trees into `.tar.gz` archives that:
 
 - **Preserve full structure** (all paths, directories, and filenames)
-- Replace actual files with **empty dummy files** (saving a lot of space)
+- Replace actual files with **zero-byte placeholder files** (saving a lot of space)
 - Can easily be **browsed with any archive viewer**
 - Support fast, efficient **diffing** between two trees
 - Can be **listed** within the CLI in sorted or original order
-- Enable **recovery planning** (extract dummies first, replace files later)
+- Enable **recovery planning** (extract stubs first, replace files later)
 
 This turns what's normally a giant wall of text into a portable, well organized snapshot.  
 Directory trees are reshaped as artifacts - something you can archive, compare, and extract.  
