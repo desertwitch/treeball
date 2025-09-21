@@ -457,7 +457,7 @@ func Test_Program_Diff_CreateFile_Error(t *testing.T) {
 }
 
 // Expectation: An invalid configuration should raise the appropriate error and the output file be removed.
-func Test_Program_Diff_InvalidCompressorConfig_Error(t *testing.T) {
+func Test_Program_Diff_InvalidCompressorCompLevel_Error(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
 	require.NoError(t, afero.WriteFile(fs, "/old.tar.gz", createTar([]string{"a.txt"}), 0o644))
