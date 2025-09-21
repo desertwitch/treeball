@@ -1,7 +1,7 @@
 <div align="center">
     <img alt="Logo" src="assets/treeball.png" width="260">
     <h1>treeball</h1>
-    <p>Being able to remember is half the recovery.</p>
+    <p>Keeping inventory is half the recovery.</p>
 </div>
 
 <div align="center">
@@ -21,14 +21,13 @@
 
 **treeball creates, diffs, and lists directory trees as archives.**
 
-An important step in recovering from catastrophic data loss is knowing what you had in the first place.
-
-`treeball` is a command-line utility for preserving directory trees as compressed archives, **replacing all files with zero-byte placeholders**. This creates lightweight, navigable tarballs that are portable, inspectable, and diffable.
+`treeball` is a command-line utility for preserving directory trees as compressed archives, **replacing all files with zero-byte placeholders**. This creates lightweight tarballs that are portable, inspectable, and diffable. Think of **browsable inventory-type backups** of e.g. media libraries without the overhead of preserving actual file contents.
 
 ### RATIONALE
 
-**Have you ever tried to find something specific in a `tree`-produced list, only to drown in all that text?**  
-**Wouldn't it be nice to just browse that as if it were your regular filesystem - but packed into a single file?**  
+An important step in recovering from catastrophic data loss is knowing what you had in the first place.  
+But have you ever tried to find something specific in a `tree`-produced list, only to drown in all that text?  
+Wouldn't it be nice to just browse that as if it were your regular filesystem - but packed into a single file?  
 
 `treeball` solves this by converting directory trees into `.tar.gz` archives that:
 
