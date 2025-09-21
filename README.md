@@ -185,6 +185,14 @@ These optional options allow for more granular control with advanced workloads o
 
 ### INSTALLATION
 
+To build from source, a `Makefile` is included with the project's source code.
+Running `make all` will compile the application and pull in any necessary
+dependencies. `make check` runs the test suite and static analysis tools.
+
+For convenience, precompiled static binaries for common architectures are
+released through GitHub. These can be installed into `/usr/bin/` or respective
+system locations; ensure they are executable by running `chmod +x` before use.
+
 #### Building from source:
 
 ```bash
