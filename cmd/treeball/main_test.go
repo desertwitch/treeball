@@ -78,6 +78,18 @@ func Test_CLI_CreateCommand_ArgCount_Error(t *testing.T) {
 	require.Error(t, cmd.Execute())
 }
 
+// Expectation: The 'create' subcommand should error when the exclude file does not exist.
+func Test_CLI_CreateCommand_ExcludeFileMissing_Error(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	cmd := newRootCmd(t.Context(), fs, nil, nil)
+	cmd.SetArgs([]string{"create", "/one", "/two", "--excludes-from=/a.txt"})
+	err := cmd.Execute()
+
+	require.Error(t, err)
+	require.ErrorContains(t, err, "exclude")
+}
+
 // Expectation: The 'diff' subcommand should error when missing arguments.
 func Test_CLI_DiffCommand_ArgCount_Error(t *testing.T) {
 	fs := afero.NewMemMapFs()
@@ -86,6 +98,18 @@ func Test_CLI_DiffCommand_ArgCount_Error(t *testing.T) {
 	cmd.SetArgs([]string{"diff", "/one", "/two"})
 
 	require.Error(t, cmd.Execute())
+}
+
+// Expectation: The 'diff' subcommand should error when the exclude file does not exist.
+func Test_CLI_DiffCommand_ExcludeFileMissing_Error(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	cmd := newRootCmd(t.Context(), fs, nil, nil)
+	cmd.SetArgs([]string{"diff", "/one", "/two", "/three", "--excludes-from=/a.txt"})
+	err := cmd.Execute()
+
+	require.Error(t, err)
+	require.ErrorContains(t, err, "exclude")
 }
 
 // Expectation: The 'list' subcommand should error when missing arguments.

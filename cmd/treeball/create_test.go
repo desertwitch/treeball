@@ -78,7 +78,7 @@ func Test_Program_Create_WithExcludes_Success(t *testing.T) {
 	require.NoError(t, afero.WriteFile(fs, "/src/b/c.txt", []byte("c"), 0o644))
 
 	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
-	require.NoError(t, prog.Create(t.Context(), "/src", "/out.tar.gz", []string{"/src/b"}))
+	require.NoError(t, prog.Create(t.Context(), "/src", "/out.tar.gz", []string{"b"}))
 
 	f, err := fs.Open("/out.tar.gz")
 	require.NoError(t, err)
@@ -104,14 +104,14 @@ func Test_Program_Create_WithExcludes_Success(t *testing.T) {
 }
 
 // Expectation: A tarball should be created with all given paths contained, except the excluded file.
-func Test_Program_Create_WithFileExcludes_Success(t *testing.T) {
+func Test_Program_Create_WithFileExcluded_Success(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
 	require.NoError(t, afero.WriteFile(fs, "/src/a.txt", []byte("a"), 0o644))
 	require.NoError(t, afero.WriteFile(fs, "/src/b/c.txt", []byte("c"), 0o644))
 
 	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
-	require.NoError(t, prog.Create(t.Context(), "/src", "/out.tar.gz", []string{"/src/b/c.txt"}))
+	require.NoError(t, prog.Create(t.Context(), "/src", "/out.tar.gz", []string{"b/*.txt"}))
 
 	f, err := fs.Open("/out.tar.gz")
 	require.NoError(t, err)
@@ -136,6 +136,20 @@ func Test_Program_Create_WithFileExcludes_Success(t *testing.T) {
 	require.Equal(t, []string{"a.txt", "b/"}, names)
 }
 
+// Expectation: An invalid exclude pattern should produce an error.
+func Test_Program_Create_InvalidExcludePattern_Error(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	require.NoError(t, afero.WriteFile(fs, "/src/a.txt", []byte("a"), 0o644))
+	require.NoError(t, afero.WriteFile(fs, "/src/b/c.txt", []byte("c"), 0o644))
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	err := prog.Create(t.Context(), "/src", "/out.tar.gz", []string{"b["})
+
+	require.Error(t, err)
+	require.ErrorContains(t, err, "exclude")
+}
+
 // Expectation: A context cancellation should be respected and the output file removed.
 func Test_Program_Create_CtxCancel_Error(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
@@ -154,7 +168,7 @@ func Test_Program_Create_CtxCancel_Error(t *testing.T) {
 }
 
 // Expectation: An invalid configuration should raise the appropriate error and the output file be removed.
-func Test_Program_Create_InvalidConfig_Error(t *testing.T) {
+func Test_Program_Create_InvalidCompressorBlockCount_Error(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
 	require.NoError(t, afero.WriteFile(fs, "/src/a.txt", []byte("a"), 0o644))
@@ -171,7 +185,7 @@ func Test_Program_Create_InvalidConfig_Error(t *testing.T) {
 }
 
 // Expectation: An invalid configuration should raise the appropriate error and the output file be removed.
-func Test_Program_Create_InvalidConfig2_Error(t *testing.T) {
+func Test_Program_Create_InvalidCompressorBlockSize_Error(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
 	require.NoError(t, afero.WriteFile(fs, "/src/a.txt", []byte("a"), 0o644))
@@ -188,7 +202,7 @@ func Test_Program_Create_InvalidConfig2_Error(t *testing.T) {
 }
 
 // Expectation: An invalid configuration should raise the appropriate error and the output file be removed.
-func Test_Program_Create_InvalidConfig3_Error(t *testing.T) {
+func Test_Program_Create_InvalidCompressorCompLevel_Error(t *testing.T) {
 	fs := afero.NewMemMapFs()
 
 	require.NoError(t, afero.WriteFile(fs, "/src/a.txt", []byte("a"), 0o644))

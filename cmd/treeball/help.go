@@ -14,7 +14,7 @@ The program works efficiently even with millions of files, intelligently off-loa
 disk when system resources would otherwise become too constrained. It supports these commands:
 
   create - build a tarball from a given directory tree
-  diff   - generate a diff tarball containing only the changes between two tarballs
+  diff   - generate a diff tarball containing only the changes between two sources
   list   - produce a sorted or unsorted listing of all the contents of a given tarball
 
 All commands print their primary results (such as file paths or differences) to standard output
@@ -32,30 +32,39 @@ For detailed help on a specific command, run:
 
 	createHelpLong = `Create a tarball representing any given directory tree.
 
-The command will recursively include all files and directories under <root-folder>,
-excluding paths specified using the --exclude flags (which can be used multiple times).
+The command will recursively include all files and directories under <root-folder>.
 Archived paths will be presented as zero byte dummy files, preserving their exact names.
 
-Beware excludes must be written in the same absolute/relative form as the <root-folder>.
+Excludes are expected as relative to <root-folder> and following 'doublestar' format:
+https://github.com/bmatcuk/doublestar?tab=readme-ov-file#patterns
 
 All paths written to the tarball will be printed to standard output (stdout), any errors
 or other relevant operational output will be printed to standard error (stderr) respectively.
 The command will return with an exit code 0 in case of success; an exit code 2 for any errors.`
 
 	createExample = `
-# Create a tarball of the current directory:
+# Archive the current directory:
 treeball create . output.tar.gz
 
-# Create a tarball excluding specific directories:
-treeball create /mnt/user user.tar.gz --exclude=/mnt/user/appdata --exclude=/mnt/user/cache`
+# Archive a directory with exclusions:
+treeball create /mnt/data output.tar.gz --exclude='src/**/main.go'
 
-	diffHelpShort = "Create a diff tarball from any two pre-existing tarballs"
+# Archive a directory with exclusions from a file:
+treeball create /mnt/data output.tar.gz --excludes-from=./excludes.txt`
 
-	diffHelpLong = `Create a diff tarball containing only the differences between any two pre-existing tarballs.
+	diffHelpShort = "Create a diff tarball from any two pre-existing sources"
 
-The command will compare the content of two existing (directory tree) tarballs and produce
-a "diff" tarball reflecting any additions or removals, comparing the "old" and "new" tarball.
-This helps to identify which files were recently added or lost (e.g., for recovery scenarios).
+	diffHelpLong = `Create a diff tarball containing only the structural differences between any two sources.
+
+The command will compare the structure of two existing (directory tree) sources and produce
+a "diff" tarball reflecting any additions or removals, comparing the "old" and "new" sources.
+This helps to identify which paths were recently added or lost (e.g., for recovery scenarios).
+
+The command supports sources as either an existing directory or an existing tarball (.tar.gz).
+This means you can compare tar vs. tar, tar vs. dir, dir vs. tar and dir vs. dir respectively.
+
+Excludes are expected as relative to given sources and following 'doublestar' format:
+https://github.com/bmatcuk/doublestar?tab=readme-ov-file#patterns
 
 Any differences will also be written to standard output (stdout), while any other operational
 output will be written to standard error (stderr). The program will return with an exit code
@@ -71,11 +80,14 @@ choose one for you, falling back to the system's default temporary file location
 # Basic usage of the command:
 treeball diff old.tar.gz new.tar.gz diff.tar.gz
 
-# Use of a specific on-disk temporary location for large tarballs:
-treeball diff old.tar.gz new.tar.gz diff.tar.gz --tmpdir=/mnt/largedisk
+# Basic usage of the command with directory comparison:
+treeball diff old.tar.gz /mnt/new diff.tar.gz
 
-# Inspecting the differences only within the current terminal (on stdout):
-treeball diff old.tar.gz new.tar.gz /dev/null`
+# Just see the diff in the terminal (without file output):
+treeball diff old.tar.gz new.tar.gz /dev/null
+
+# Use of an on-disk temporary directory (for massive archives):
+treeball diff old.tar.gz new.tar.gz diff.tar.gz --tmpdir=/mnt/largedisk`
 
 	listHelpShort = "List the paths contained in a tarball (sorted by default)"
 
@@ -96,12 +108,12 @@ data can peak at multiple gigabytes. If none is provided, the intelligent mechan
 choose one for you, falling back to the system's default temporary file location on failure.`
 
 	listExample = `
-# List as sorted the contents of a tarball:
+# List the contents as sorted (default):
 treeball list input.tar.gz
 
-# Preserve the original archive order in the listing:
+# List the contents in their original archive order:
 treeball list input.tar.gz --sort=false
 
-# Use a specific on-disk temporary directory for large archives:
+# Use of an on-disk temporary directory (for massive archives):
 treeball list input.tar.gz --tmpdir=/mnt/largedisk`
 )

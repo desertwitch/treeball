@@ -1,13 +1,54 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2012,SC2206,SC2188,SC2129
 set -euo pipefail
 
-TREEBALL_BIN="./treeball"
-BASE_DIR="/mnt/treeball_xfs"
-RESULTS="./treeball_bench.txt"
-SIZES=(5000 10000 50000 100000 500000 1000000 5000000)
-TMP_LOG="./treeball_bench_tmp.txt"
+command -v go >/dev/null 2>&1 || {
+    echo "Go compiler not found in PATH" >&2
+    exit 1
+}
 
-mkdir -p "$BASE_DIR"
+if [[ ! $EUID -eq 0 ]]; then
+    echo ""
+    echo "!! IF NOT RUNNING AS ROOT (WHICH IS OK), YOU WILL BE PROMPTED"
+    echo "!! FOR YOUR CREDENTIALS BY SUDO, AS THIS IS REQUIRED TO CLEAR"
+    echo "!! THE KERNEL CACHES BETWEEN BENCHMARKING JOBS. THIS MAY EVEN"
+    echo "!! OCCUR MULTIPLE TIMES DUE TO SUDO REAUTHENTICATION TIMEOUT."
+    echo "!! IF YOU WANT TO AVOID THAT, INSPECT SCRIPT AND RUN AS ROOT."
+    echo ""
+fi
+
+read -r -p "Enter TREEBALL_BIN path [./treeball]: " input
+TREEBALL_BIN="${input:-./treeball}"
+
+read -r -p "Enter RESULTS file path [./treeball_benchmark.txt]: " input
+RESULTS="${input:-./treeball_benchmark.txt}"
+
+read -r -p "Enter TMP_LOG file path [./treeball_benchmark_tmp.txt]: " input
+TMP_LOG="${input:-./treeball_benchmark_tmp.txt}"
+
+echo ""
+echo "!! ENSURE ENOUGH INODES + DISK SPACE FOR THE FOLLOWING DIRS:"
+echo "!! BENCH_DIR NEEDS AT LEAST AS MANY INODES AS SIZES BENCHMARKED."
+echo "!! TMP_DIR NEEDS AT LEAST MULTIPLE GIGABYTES FOR EXTERNAL SORTING."
+echo ""
+
+read -r -p "Enter BENCH_DIR path [./treeball_benchmark]: " input
+BENCH_DIR="${input:-./treeball_benchmark}"
+
+read -r -p "Enter TMP_DIR path [./treeball_benchmark_tmp]: " input
+TMP_DIR="${input:-./treeball_benchmark_tmp}"
+
+read -r -p "Enter SIZES (space-separated) [5000 10000 50000 100000 500000 1000000 5000000 10000000]: " input
+SIZES=(${input:-5000 10000 50000 100000 500000 1000000 5000000 10000000})
+
+cleanup() {
+    rm -f "$TMP_LOG"
+    rm -rf "$BENCH_DIR"/trbb_* "$TMP_DIR"/trbb_*
+}
+trap cleanup EXIT
+
+mkdir -p "$BENCH_DIR"
+mkdir -p "$TMP_DIR"
 > "$RESULTS"
 
 log() {
@@ -16,11 +57,23 @@ log() {
 
 drop_caches() {
     sync
-    echo 3 > /proc/sys/vm/drop_caches
+    if [[ $EUID -eq 0 ]]; then
+        echo 3 > /proc/sys/vm/drop_caches
+    else
+        if sudo -n true 2>/dev/null; then
+            sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches'
+        else
+            echo ""
+            echo "!! NOW REQUESTING SUDO TO DROP THE KERNEL CACHES:" >&2
+            sudo sh -c 'echo 3 > /proc/sys/vm/drop_caches'
+            echo "!! THANK YOU, NOW PROCEEDING WITH BENCHMARKS..."
+            echo ""
+        fi
+    fi
 }
 
 check_treeball() {
-    if ! "$TREEBALL_BIN" --version >> "$RESULTS"; then
+    if ! "$TREEBALL_BIN" --version | tee -a "$RESULTS"; then
         echo "Error: treeball binary not working at $TREEBALL_BIN" >&2
         exit 1
     fi
@@ -45,45 +98,27 @@ extract_and_log_metrics() {
 }
 
 create_dummy_tree() {
-    local dir=$1
-    local count=$2
-    local files_per_dir=100
-
-    local dirs_needed=$((count / files_per_dir + 1))
-
-    for ((d=0; d<dirs_needed; d++)); do
-        local level1="dept_$(printf "%02d" $((d / 1000)))"
-        local level2="proj_$(printf "%03d" $((d / 100)))"
-        local level3="batch_$(printf "%04d" $((d / 10)))"
-        local level4="group_$(printf "%06d" $d)"
-
-        local subdir="$dir/$level1/$level2/$level3/$level4"
-        mkdir -p "$subdir"
-
-        for ((f=0; f<files_per_dir && d*files_per_dir+f<count; f++)); do
-            touch "$subdir/data_$(printf "%06d" $f).txt"
-        done
-    done
+    go run ./tools/mktree "$1" "$2"
 }
 
 run_benchmarks() {
     local count=$1
-    local root="$BASE_DIR/root_$count"
-    local tar1="tree_${count}_a.tar.gz"
-    local tar2="tree_${count}_b.tar.gz"
-    local diff="diff_${count}.tar.gz"
+    local root="$BENCH_DIR/trbb_$count"
+    local tar1="$TMP_DIR/trbb_${count}_a.tar.gz"
+    local tar2="$TMP_DIR/trbb_${count}_b.tar.gz"
+    local diff="$TMP_DIR/trbb_diff_${count}.tar.gz"
 
     log "Generating directory with $count files..."
     rm -rf "$root"
     create_dummy_tree "$root" "$count"
 
-    echo -e "\n=== $count FILES ===" >> "$RESULTS"
+    echo -e "\n--- $count FILES ---" >> "$RESULTS"
     log "Benching with $count files..."
 
     # 1. CREATE
     drop_caches
     /usr/bin/time -f "CREATE wall: %e sec, user: %U, sys: %S, RAM: %M KB" -o "$TMP_LOG" \
-        "$TREEBALL_BIN" create "$root" "$tar1" > /dev/null
+        "$TREEBALL_BIN" create "$root" "$tar1" --exclude='random1' --exclude='random2' --exclude='random3' > /dev/null
     ls -lh "$tar1" | awk '{print "CREATE size: " $5}' >> "$TMP_LOG"
     extract_and_log_metrics "CREATE"
 
@@ -93,50 +128,74 @@ run_benchmarks() {
     # 3. CREATE2
     drop_caches
     /usr/bin/time -f "CREATE2 wall: %e sec, user: %U, sys: %S, RAM: %M KB" -a -o "$TMP_LOG" \
-        "$TREEBALL_BIN" create "$root" "$tar2" > /dev/null
+        "$TREEBALL_BIN" create "$root" "$tar2" --exclude='random1' --exclude='random2' --exclude='random3' > /dev/null
     ls -lh "$tar2" | awk '{print "CREATE2 size: " $5}' >> "$TMP_LOG"
     extract_and_log_metrics "CREATE2"
 
-    # 4. DIFF (ignore exit 1)
+    # 4. DIFF - TAR/TAR (ignore exit 1)
     drop_caches
     set +e
-    /usr/bin/time -f "DIFF wall: %e sec, user: %U, sys: %S, RAM: %M KB" -a -o "$TMP_LOG" \
-        "$TREEBALL_BIN" diff "$tar1" "$tar2" "$diff" --tmpdir="$BASE_DIR" &> /dev/null
+    /usr/bin/time -f "DIFF TAR/TAR wall: %e sec, user: %U, sys: %S, RAM: %M KB" -a -o "$TMP_LOG" \
+        "$TREEBALL_BIN" diff "$tar1" "$tar2" "$diff" --tmpdir="$TMP_DIR" --exclude='random1' --exclude='random2' --exclude='random3' &> /dev/null
     set -e
-    ls -lh "$diff" | awk '{print "DIFF size: " $5}' >> "$TMP_LOG"
-    extract_and_log_metrics "DIFF"
+    extract_and_log_metrics "DIFF TAR/TAR"
 
-    # 5. LIST
+    # 5. DIFF - TAR/FOLDER (ignore exit 1)
+    drop_caches
+    set +e
+    /usr/bin/time -f "DIFF TAR/FOLDER wall: %e sec, user: %U, sys: %S, RAM: %M KB" -a -o "$TMP_LOG" \
+        "$TREEBALL_BIN" diff "$tar1" "$root" "$diff" --tmpdir="$TMP_DIR" --exclude='random1' --exclude='random2' --exclude='random3' &> /dev/null
+    set -e
+    extract_and_log_metrics "DIFF TAR/FOLDER"
+
+    # 6. DIFF - FOLDER/FOLDER (ignore exit 1)
+    drop_caches
+    set +e
+    /usr/bin/time -f "DIFF FOLDER/FOLDER wall: %e sec, user: %U, sys: %S, RAM: %M KB" -a -o "$TMP_LOG" \
+        "$TREEBALL_BIN" diff "$root" "$root" "$diff" --tmpdir="$TMP_DIR" --exclude='random1' --exclude='random2' --exclude='random3' &> /dev/null
+    set -e
+    extract_and_log_metrics "DIFF FOLDER/FOLDER"
+
+    # 7. LIST
     drop_caches
     /usr/bin/time -f "LIST wall: %e sec, user: %U, sys: %S, RAM: %M KB" -a -o "$TMP_LOG" \
-        "$TREEBALL_BIN" list "$tar2" --tmpdir="$BASE_DIR" > /dev/null
+        "$TREEBALL_BIN" list "$tar2" --tmpdir="$TMP_DIR" > /dev/null
     extract_and_log_metrics "LIST"
-
-    avg_len=$(find "$root" -type f | awk '{ total += length($0); count++ } END { if (count > 0) print int(total/count); else print 0 }')
-    echo "Average path length: ${avg_len} characters" >> "$RESULTS"
-
-    max_depth=$(find "$root" -type f -printf '%d\n' | sort -n | tail -1)
-    echo "Maximum path depth: ${max_depth} levels" >> "$RESULTS"
 
     cat "$TMP_LOG" >> "$RESULTS"
     rm -f "$tar1" "$tar2" "$diff" "$TMP_LOG"
     rm -rf "$root"
 }
 
-if [[ $EUID -ne 0 ]]; then
-  echo "This script must be run as root (to drop kernel caches)." >&2
-  exit 1
-fi
+echo ""
+echo "===========================" | tee -a "$RESULTS"
+date | tee -a "$RESULTS"
+echo "===========================" | tee -a "$RESULTS"
 
-echo "CPU cores: $(nproc)" >> "$RESULTS"
-echo "Filesystem type: $(df -T "$BASE_DIR" | awk 'NR==2 {print $2}')" >> "$RESULTS"
+echo "" | tee -a "$RESULTS"
+echo "TREEBALL_BIN=$TREEBALL_BIN" | tee -a "$RESULTS"
+echo "RESULTS=$RESULTS" | tee -a "$RESULTS"
+echo "TMP_LOG=$TMP_LOG" | tee -a "$RESULTS"
+echo "BENCH_DIR=$BENCH_DIR" | tee -a "$RESULTS"
+echo "TMP_DIR=$TMP_DIR" | tee -a "$RESULTS"
+echo "SIZES=(${SIZES[*]})" | tee -a "$RESULTS"
+echo "" | tee -a "$RESULTS"
 
+echo "CPU cores: $(nproc)" | tee -a "$RESULTS"
+echo "Filesystem type: $(df -T "$BENCH_DIR" | awk 'NR==2 {print $2}')" | tee -a "$RESULTS"
+echo "Max directory depth: 5" | tee -a "$RESULTS"
+echo "Max path length: $(( ${#BENCH_DIR} + 1 + 58 )) characters" | tee -a "$RESULTS"
 check_treeball
 
+echo ""
 log "Starting benchmarks..."
+
 for size in "${SIZES[@]}"; do
     run_benchmarks "$size"
 done
 
-log "Done. Results saved to $RESULTS."
+echo "" | tee -a "$RESULTS"
+echo "BENCHMARK COMPLETE" | tee -a "$RESULTS"
+echo "" | tee -a "$RESULTS"
+
 cat "$RESULTS"
