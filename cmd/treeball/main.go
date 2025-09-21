@@ -4,7 +4,7 @@ treeball creates, diffs, and lists directory trees as archives.
 It preserves directory trees as compressed archives, replacing all files with zero-byte
 placeholder files. This creates lightweight tarballs that are portable, navigable, and
 diffable. Think of browsable inventory-type backups of e.g. media libraries, but without
-overhead of preserving the file contents.
+the overhead of preserving file contents.
 
 The program works efficiently even with millions of files, intelligently off-loading data to
 disk when system resources would otherwise become too constrained. It supports these commands:

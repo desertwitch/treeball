@@ -21,7 +21,7 @@
 
 **treeball creates, diffs, and lists directory trees as archives.**
 
-`treeball` is a command-line utility for preserving directory trees as compressed archives, **replacing all files with zero-byte placeholder files**. This creates lightweight tarballs that are portable, navigable, and diffable. Think of **browsable inventory-type backups** of e.g. media libraries, but without overhead of preserving the file contents.
+`treeball` is a command-line utility for preserving directory trees as compressed archives, **replacing all files with zero-byte placeholder files**. This creates lightweight tarballs that are portable, navigable, and diffable. Think of **browsable inventory-type backups** of e.g. media libraries, but without the overhead of preserving file contents.
 
 ### RATIONALE
 
