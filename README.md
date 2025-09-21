@@ -197,7 +197,7 @@ system locations; ensure they are executable by running `chmod +x` before use.
 ```bash
 git clone https://github.com/desertwitch/treeball.git
 cd treeball
-make
+make all
 ```
 
 #### Running a built executable:
