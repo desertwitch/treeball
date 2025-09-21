@@ -95,7 +95,7 @@ treeball diff old.tar.gz new.tar.gz diff.tar.gz --tmpdir=/mnt/largedisk`
 
 By default, the paths are sorted alphabetically, which improves readability and makes it
 easier to 'diff' or otherwise compare. --sort=false preserves the original archive order,
-if that would otherwise be needed.
+if that would alternatively be needed.
 
 All listed paths are printed to standard output (stdout), while any operational output and
 encountered errors will be written to standard error (stderr) respectively. The command
