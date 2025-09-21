@@ -42,5 +42,12 @@ signs:
   - artifacts: checksum
 
 release:
-  footer: Any release files are unattended builds and served without any warranties.
+  footer: |
+    Files without an extension are all static binaries for the most common architectures.  
+    Most users will want the `linux_amd64` binary (see installation instructions in `README`).  
+
+    `.txz`, `.asc` and `.md5` files are part of the Slackware distribution package.  
+    These specific packages are offered as a service for fellow Unraid OS enthusiasts.  
+
+    Do note that any release files are unattended builds and served without any warranties.
 
