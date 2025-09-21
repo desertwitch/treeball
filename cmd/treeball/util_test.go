@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"strings"
 	"testing"
 
 	"github.com/spf13/afero"
@@ -314,7 +315,6 @@ func Test_Program_fsPathStream_CtxCancel_Error(t *testing.T) {
 	cancel()
 
 	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
-
 	paths, errs := prog.fsPathStream(ctx, "/cancel", false, nil)
 
 	for range paths {
@@ -417,6 +417,7 @@ func Test_Program_mergeExcludes_NoExcludes_Success(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NotNil(t, result)
+	require.Empty(t, result)
 }
 
 // Expectation: Should return an error if the exclude file does not exist.
@@ -453,6 +454,16 @@ func Test_writeDummyFile_Success(t *testing.T) {
 		}
 
 		require.NoError(t, err)
+		require.Zero(t, hdr.Size)
+
+		if strings.HasSuffix(hdr.Name, "/") {
+			require.Equal(t, tar.TypeDir, rune(hdr.Typeflag))
+			require.Equal(t, baseFolderPerms, hdr.Mode)
+		} else {
+			require.Equal(t, tar.TypeReg, rune(hdr.Typeflag))
+			require.Equal(t, baseFilePerms, hdr.Mode)
+		}
+
 		names = append(names, hdr.Name)
 	}
 

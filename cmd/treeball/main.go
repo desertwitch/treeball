@@ -42,8 +42,8 @@ import (
 )
 
 const (
-	baseFilePerms   = 0o666
-	baseFolderPerms = 0o777
+	baseFilePerms   int64 = 0o666
+	baseFolderPerms int64 = 0o777
 
 	tarStreamBuffer  = 1000
 	fsStreamBuffer   = 1000
