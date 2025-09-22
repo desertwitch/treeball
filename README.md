@@ -188,13 +188,13 @@ To build from source, a `Makefile` is included with the project's source code.
 Running `make all` will compile the application and pull in any necessary
 dependencies. `make check` runs the test suite and static analysis tools.
 
-All builds are designed to generate [reproducible
-builds](https://reproducible-builds.org/), meaning that they should compile as
-byte-identical to the released binaries and also have the same checksums upon verification.
-
 For convenience, precompiled static binaries for common architectures are
 released through GitHub. These can be installed into `/usr/bin/` or respective
 system locations; ensure they are executable by running `chmod +x` before use.
+
+> All builds from source are designed to generate [reproducible builds](https://reproducible-builds.org/),
+> meaning that they should compile as byte-identical to the respective released binaries and also have the
+> exact same checksums upon verification.
 
 #### Building from source:
 
