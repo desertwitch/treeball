@@ -113,7 +113,7 @@ Beware the `diff` archive contains synthetic `+++` and `---` directories to refl
 
 #### `treeball list`
 
-List the contents of a `.tar.gz` tree archive (sorted or unsorted).
+List the contents of a `.tar.gz` tree archive (as sorted or unsorted).
 
 ```bash
 treeball list <input.tar.gz> [--tmpdir=PATH] [--sort=false] [--exclude=PATTERN] [--excludes-from=PATH]
