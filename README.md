@@ -194,7 +194,7 @@ system locations; ensure they are executable by running `chmod +x` before use.
 
 > All builds from source are designed to generate [reproducible builds](https://reproducible-builds.org/),
 > meaning that they should compile as byte-identical to the respective released binaries and also have the
-> exact same checksums upon verification.
+> exact same checksums upon integrity verification.
 
 #### Building from source:
 
