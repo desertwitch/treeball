@@ -121,3 +121,17 @@ func Test_CLI_ListCommand_ArgCount_Error(t *testing.T) {
 
 	require.Error(t, cmd.Execute())
 }
+
+// Expectation: The 'list' subcommand should error when the exclude file does not exist.
+func Test_CLI_ListCommand_ExcludeFileMissing(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	_ = afero.WriteFile(fs, "/input.tar.gz", createTar([]string{"a.txt", "b.txt"}), 0o644)
+
+	cmd := newRootCmd(t.Context(), fs, nil, nil)
+	cmd.SetArgs([]string{"list", "/input.tar.gz", "--excludes-from=/e.txt"})
+	err := cmd.Execute()
+
+	require.Error(t, err)
+	require.ErrorContains(t, err, "exclude")
+}

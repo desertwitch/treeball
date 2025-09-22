@@ -20,7 +20,22 @@ func Test_Program_List_Sorted_Success(t *testing.T) {
 	var stdoutBuf bytes.Buffer
 
 	prog := NewProgram(fs, &stdoutBuf, io.Discard, nil, nil)
-	require.NoError(t, prog.List(t.Context(), "/archive.tar.gz", true))
+	require.NoError(t, prog.List(t.Context(), "/archive.tar.gz", true, nil))
+
+	paths := strings.Split(strings.TrimSpace(stdoutBuf.String()), "\n")
+	require.Equal(t, []string{"a.txt", "dir/", "z.txt"}, paths)
+}
+
+// Expectation: A sorted list should be produced and the exclude patterns respected.
+func Test_Program_List_Sorted_Excludes_Success(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	require.NoError(t, afero.WriteFile(fs, "/archive.tar.gz", createTar([]string{"z.txt", "a.txt", "y.txt", "dir/"}), 0o644))
+
+	var stdoutBuf bytes.Buffer
+
+	prog := NewProgram(fs, &stdoutBuf, io.Discard, nil, nil)
+	require.NoError(t, prog.List(t.Context(), "/archive.tar.gz", true, []string{"y.txt"}))
 
 	paths := strings.Split(strings.TrimSpace(stdoutBuf.String()), "\n")
 	require.Equal(t, []string{"a.txt", "dir/", "z.txt"}, paths)
@@ -35,7 +50,22 @@ func Test_Program_List_Unsorted_Success(t *testing.T) {
 	var stdoutBuf bytes.Buffer
 
 	prog := NewProgram(fs, &stdoutBuf, io.Discard, nil, nil)
-	require.NoError(t, prog.List(t.Context(), "/archive.tar.gz", false))
+	require.NoError(t, prog.List(t.Context(), "/archive.tar.gz", false, nil))
+
+	paths := strings.Split(strings.TrimSpace(stdoutBuf.String()), "\n")
+	require.Equal(t, []string{"z.txt", "a.txt", "dir/"}, paths)
+}
+
+// Expectation: An unsorted list should be produced and the exclude patterns respected.
+func Test_Program_List_Unsorted_Excludes_Success(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	require.NoError(t, afero.WriteFile(fs, "/archive.tar.gz", createTar([]string{"z.txt", "y.txt", "a.txt", "dir/"}), 0o644))
+
+	var stdoutBuf bytes.Buffer
+
+	prog := NewProgram(fs, &stdoutBuf, io.Discard, nil, nil)
+	require.NoError(t, prog.List(t.Context(), "/archive.tar.gz", false, []string{"y.txt"}))
 
 	paths := strings.Split(strings.TrimSpace(stdoutBuf.String()), "\n")
 	require.Equal(t, []string{"z.txt", "a.txt", "dir/"}, paths)
@@ -53,5 +83,5 @@ func Test_Program_List_CtxCancel_Error(t *testing.T) {
 	var stdoutBuf, stderrBuf bytes.Buffer
 
 	prog := NewProgram(fs, &stdoutBuf, &stderrBuf, nil, nil)
-	require.ErrorIs(t, prog.List(ctx, "/archive.tar.gz", false), context.Canceled)
+	require.ErrorIs(t, prog.List(ctx, "/archive.tar.gz", false, nil), context.Canceled)
 }

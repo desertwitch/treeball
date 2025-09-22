@@ -226,6 +226,9 @@ func newDiffCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Wr
 }
 
 func newListCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Writer) *cobra.Command {
+	var excludes []string
+	var excludesFile string
+
 	sort := true
 	sorterConfig := extSortConfigDefault
 
@@ -238,10 +241,17 @@ func newListCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Wr
 		RunE: func(_ *cobra.Command, args []string) error {
 			prog := NewProgram(fs, stdout, stderr, nil, &sorterConfig)
 
-			return prog.List(ctx, args[0], sort)
+			excl, err := prog.mergeExcludes(excludes, excludesFile)
+			if err != nil {
+				return fmt.Errorf("failed to evaluate exclude arguments: %w", err)
+			}
+
+			return prog.List(ctx, args[0], sort, excl)
 		},
 	}
 
+	listCmd.Flags().StringArrayVar(&excludes, "exclude", nil, "pattern to exclude; can be repeated multiple times")
+	listCmd.Flags().StringVar(&excludesFile, "excludes-from", "", "path to a file containing exclude patterns")
 	listCmd.Flags().BoolVar(&sort, "sort", true, "sort the output list; for better comparability")
 	listCmd.Flags().StringVar(&sorterConfig.TempFilesDir, "tmpdir", extSortConfigDefault.TempFilesDir, "on-disk location for intermediate files")
 	listCmd.Flags().IntVar(&sorterConfig.NumWorkers, "workers", extSortConfigDefault.NumWorkers, "workers for concurrent operations")

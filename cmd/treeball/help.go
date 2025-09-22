@@ -94,8 +94,10 @@ treeball diff old.tar.gz new.tar.gz diff.tar.gz --tmpdir=/mnt/largedisk`
 	listHelpLong = `List all contained paths in a tarball, either sorted or in original order.
 
 By default, the paths are sorted alphabetically, which improves readability and makes it
-easier to 'diff' or otherwise compare. --sort=false preserves the original archive order,
-if that would alternatively be needed.
+easier to 'diff' or otherwise process. --sort=false preserves the original archive order.
+
+Excludes are expected as relative to given source and following 'doublestar' format:
+https://github.com/bmatcuk/doublestar?tab=readme-ov-file#patterns
 
 All listed paths are printed to standard output (stdout), while any operational output and
 encountered errors will be written to standard error (stderr) respectively. The command
