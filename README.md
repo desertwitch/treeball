@@ -231,6 +231,11 @@ Average path length: ~80 characters / Maximum directory depth: 5 levels
 3x `--exclude` / `--tmpdir` (on same disk) / Maximum compression level (9)  
 i5-12600K 3.69 GHz (16 cores), 32GB RAM, 980 Pro NVMe (EXT4), Ubuntu 24.04.2  
 
+### ACKNOWLEDGEMENTS
+
+This program would not be possible without Ian Foster's amazing `extsort` library:  
+[https://github.com/lanrat/extsort](https://github.com/lanrat/extsort) / [https://pkg.go.dev/github.com/lanrat/extsort](https://pkg.go.dev/github.com/lanrat/extsort)
+
 ### SECURITY, CONTRIBUTIONS, AND LICENSE
 
 Please report any issues via the GitHub Issues tracker. While no major features are currently planned, contributions are welcome. Contributions should be submitted through GitHub and, if possible, should pass the test suite and comply with the project's linting rules. All code is licensed under the MIT license.
