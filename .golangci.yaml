@@ -2,15 +2,11 @@ linters:
     enable-all: true
     disable:
             - depguard
-            - dupl
             - exhaustruct
-            - goconst
+            - gochecknoglobals
             - tenv
             - varnamelen
-            - testpackage
             - wsl
-            - gochecknoglobals
-            - paralleltest
 
 linters-settings:
     cyclop:
@@ -46,22 +42,10 @@ linters-settings:
     gosimple:
         checks: ["all", "-S1008"]
 
-    wrapcheck:
-        ignoreSigRegexps:
-            - unix.*?\(
-            - os.*?\(
-            - filepath.*?\(
-
     nestif:
         # Minimal complexity of if statements to report.
         # Default: 5
         min-complexity: 6
-
-    gomoddirectives:
-        # List of allowed `replace` directives.
-        # Default: []
-        replace-allow-list:
-        - github.com/charmbracelet/bubbletea
 
     paralleltest:
         ignore-missing-subtests: true
@@ -80,8 +64,9 @@ issues:
         # Exclude some linters from running on tests files.
         - path: _test\.go
           linters:
-            - tparallel
-            - revive
+            - err113
             - funlen
             - ireturn
-            - err113
+            - paralleltest
+            - revive
+            - tparallel

@@ -52,7 +52,7 @@ type OSWalker struct{}
 
 // WalkDir is a wrapper method for the native [filepath.WalkDir] function.
 func (w OSWalker) WalkDir(root string, fn fs.WalkDirFunc) error {
-	return filepath.WalkDir(root, fn)
+	return filepath.WalkDir(root, fn) //nolint:wrapcheck
 }
 
 type fileInfoDirEntry struct {
