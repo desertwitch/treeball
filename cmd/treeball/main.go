@@ -33,6 +33,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"runtime/debug"
 	"syscall"
 	"time"
 
@@ -45,14 +46,14 @@ const (
 	baseFilePerms   int64 = 0o666
 	baseFolderPerms int64 = 0o777
 
-	tarStreamBuffer  = 1000
-	fsStreamBuffer   = 1000
-	stackTraceBuffer = 1 << 24
+	tarStreamBuffer int = 1000
+	fsStreamBuffer  int = 1000
 
-	exitTimeout        = 10 * time.Second
-	exitCodeSuccess    = 0
-	exitCodeDiffsFound = 1
-	exitCodeFailure    = 2
+	exitCodeSuccess    int = 0
+	exitCodeDiffsFound int = 1
+	exitCodeFailure    int = 2
+
+	exitTimeout time.Duration = 10 * time.Second
 )
 
 var (
@@ -262,8 +263,12 @@ func newListCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Wr
 
 func main() {
 	var exitCode int
-
 	defer func() {
+		if r := recover(); r != nil {
+			fmt.Fprintf(os.Stderr, "panic: %v\n\n", r)
+			debug.PrintStack()
+			exitCode = exitCodeFailure
+		}
 		os.Exit(exitCode)
 	}()
 
@@ -278,9 +283,7 @@ func main() {
 
 	go func() {
 		for range sigChan2 {
-			buf := make([]byte, stackTraceBuffer)
-			stacklen := runtime.Stack(buf, true)
-			os.Stderr.Write(buf[:stacklen])
+			debug.PrintStack()
 		}
 	}()
 
