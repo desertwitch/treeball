@@ -74,7 +74,7 @@ func (prog *Program) Create(ctx context.Context, input string, output string, ex
 			return fmt.Errorf("failed to write dummy file: %w", err)
 		}
 
-		fmt.Fprintln(prog.stdout, path)
+		fmt.Fprintln(prog.stdout, relPath)
 
 		return nil
 	}); err != nil {
