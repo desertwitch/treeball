@@ -15,6 +15,7 @@ import (
 // A helper filesystem for tests to simulate filesystem errors.
 type failingFs struct {
 	afero.Fs
+
 	failMkdirAll bool
 	failCreate   bool
 }

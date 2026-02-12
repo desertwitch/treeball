@@ -1,0 +1,260 @@
+================================================================================
+                                   treeball
+                    Keeping inventory is half the recovery.
+================================================================================
+
+OVERVIEW
+--------
+
+treeball creates, diffs, and lists directory trees as archives.
+
+treeball is a command-line utility for preserving directory trees as compressed
+archives, replacing all files with zero-byte placeholder files. This creates
+lightweight tarballs that are portable, navigable, and diffable. Think of
+browsable inventory-type backups of e.g. media libraries, but without the
+overhead of preserving file contents.
+
+
+RATIONALE
+---------
+
+An important step in recovering from catastrophic data loss is knowing what you
+had in the first place.
+
+But have you ever tried to find something specific in a tree-produced list, only
+to drown in all that text? Wouldn't it be nice to just browse that as if it were
+your regular filesystem - but packed into a single file?
+
+treeball solves this by converting directory trees into .tar.gz archives that:
+
+- Preserve full structure (all paths, directories, and filenames)
+- Replace actual files with zero-byte placeholder files (saving space)
+- Can easily be browsed with any archive viewer
+- Support fast, efficient diffing between two trees
+- Can be listed within the CLI in sorted or original order
+- Enable recovery planning (extract stubs first, replace files later)
+
+This turns what's normally a giant wall of text into a portable, well organized
+snapshot. Directory trees are reshaped as artifacts - something you can archive,
+compare, and extract.
+
+
+FEATURES
+--------
+
+Core commands:
+- Create a tree tarball from any directory tree
+- Diff two tree sources to detect added/removed paths
+- List the contents of a tree tarball (sorted or original order)
+
+Operational strengths:
+- Works efficiently even with millions of files (see benchmarks)
+- Streams data and uses external sorting for a low resource profile
+- Clear, scriptable output via stdout / stderr (no useless chatter)
+- Fully tested (including exclusion logic, signal handling, edge cases)
+
+
+COMMANDS
+--------
+
+treeball create
+~~~~~~~~~~~~~~~
+
+Build a .tar.gz archive from a directory tree.
+
+    treeball create <root-folder> <output.tar.gz> \
+        [--exclude=PATTERN] [--excludes-from=PATH]
+
+Examples:
+
+    # Archive the current directory:
+    treeball create . output.tar.gz
+
+    # Archive a directory with exclusions:
+    treeball create /mnt/data output.tar.gz --exclude='src/**/main.go'
+
+    # Archive a directory with exclusions from a file:
+    treeball create /mnt/data output.tar.gz --excludes-from=./excludes.txt
+
+
+treeball diff
+~~~~~~~~~~~~~
+
+Compare two sources and create a diff archive reflecting structural changes
+(added/removed files and directories).
+
+    treeball diff <old> <new> <diff.tar.gz> \
+        [--tmpdir=PATH] [--exclude=PATTERN] [--excludes-from=PATH]
+
+The command supports sources as either an existing directory or an existing
+tarball (.tar.gz). This means you can compare tar vs. tar, tar vs. dir, dir
+vs. tar and dir vs. dir respectively.
+
+Examples:
+
+    # Basic usage of the command:
+    treeball diff old.tar.gz new.tar.gz diff.tar.gz
+
+    # Basic usage of the command with directory comparison:
+    treeball diff old.tar.gz /mnt/new diff.tar.gz
+
+    # Just see the diff in the terminal (without file output):
+    treeball diff old.tar.gz new.tar.gz /dev/null
+
+    # Use of an on-disk temporary directory (for massive archives):
+    treeball diff old.tar.gz new.tar.gz diff.tar.gz --tmpdir=/mnt/largedisk
+
+Beware the diff archive contains synthetic +++ and --- directories to reflect
+both additions and removals.
+
+Performance considerations with massive archives:
+
+    The external sorting mechanism may off-load excess data to on-disk
+    locations (controllable with --tmpdir) to conserve RAM.
+
+    Ensure that a suitable location is provided (in terms of speed and
+    available space), as such data can peak at multiple gigabytes.
+
+    If none is provided, the intelligent mechanism will try choose one for
+    you, falling back to the system's default temporary file location.
+
+
+treeball list
+~~~~~~~~~~~~~
+
+List the contents of a .tar.gz tree archive (as sorted or unsorted).
+
+    treeball list <input.tar.gz> \
+        [--tmpdir=PATH] [--sort=false] [--exclude=PATTERN] [--excludes-from=PATH]
+
+Examples:
+
+    # List the contents as sorted (default):
+    treeball list input.tar.gz
+
+    # List the contents in their original archive order:
+    treeball list input.tar.gz --sort=false
+
+    # Use of an on-disk temporary directory (for massive archives):
+    treeball list input.tar.gz --tmpdir=/mnt/largedisk
+
+Performance considerations with massive archives:
+
+    The external sorting mechanism may off-load excess data to on-disk
+    locations (controllable with --tmpdir) to conserve RAM.
+
+    Ensure that a suitable location is provided (in terms of speed and
+    available space), as such data can peak at multiple gigabytes.
+
+    If none is provided, the intelligent mechanism will try choose one for
+    you, falling back to the system's default temporary file location.
+
+
+EXCLUDE PATTERNS
+----------------
+
+Exclusion patterns are expected to always be relative to the given input
+directory tree. This means, passing /mnt/user to a command, a.txt would
+exclude /mnt/user/a.txt.
+
+--exclude arguments can be repeated multiple times, and/or a --excludes-from
+file be loaded. If either type of argument is given, all exclusion patterns
+are merged together at program runtime.
+
+All exclusion patterns are expected to follow the doublestar-format:
+https://github.com/bmatcuk/doublestar?tab=readme-ov-file#patterns
+
+
+ADVANCED OPTIONS
+----------------
+
+These optional options allow for more granular control with advanced
+workloads or environments.
+
+treeball create:
+
+    Flag           Description                                        Default
+    ---------------------------------------------------------------------------
+    --blocksize    Compression block size                             1048576
+    --blockcount   Number of compression blocks processed             GOMAXPROCS
+                   in parallel
+
+treeball create / treeball diff:
+
+    Flag           Description                                        Default
+    ---------------------------------------------------------------------------
+    --compression  Targeted level of compression                      9
+                   (0: none - 9: highest)
+
+treeball diff / treeball list:
+
+    Flag           Description                                        Default
+    ---------------------------------------------------------------------------
+    --tmpdir       On-disk directory for external sorting             "" (auto)
+                                                                      [1][2]
+    --workers      Number of parallel worker threads used             GOMAXPROCS
+                   for sorting/diffing                                [3]
+    --chunksize    Maximum in-memory records per worker               100000
+                   (before spilling to disk)
+
+    [1] You should use --tmpdir to point to high-speed storage (e.g., NVMe
+        scratch disk) for best performance.
+    [2] You should ensure --tmpdir has sufficient free space of up to several
+        gigabytes for advanced workloads.
+    [3] When GOMAXPROCS is smaller than 4, that will be chosen as default -
+        otherwise --workers will default to 4.
+
+
+EXIT CODES
+----------
+
+    0 - Success
+    1 - Differences found (only for diff)
+    2 - General failure (invalid input, I/O errors, etc.)
+
+
+INSTALLATION
+------------
+
+To build from source, a Makefile is included with the project's source code.
+Running "make all" will compile the application and pull in any necessary
+dependencies. "make check" runs the test suite and static analysis tools.
+
+For convenience, precompiled static binaries for common architectures are
+released through GitHub. These can be installed into /usr/bin/ or respective
+system locations; ensure they are executable by running "chmod +x" before use.
+
+All builds from source are designed to generate reproducible builds
+(https://reproducible-builds.org/), meaning that they should compile as
+byte-identical to the respective released binaries and also have the
+exact same checksums upon integrity verification.
+
+Building from source:
+
+    git clone https://github.com/desertwitch/treeball.git
+    cd treeball
+    make all
+
+Running a built executable:
+
+    ./treeball --help
+
+
+ACKNOWLEDGEMENTS
+----------------
+
+This program would not be possible without Ian Foster's extsort library:
+
+    https://github.com/lanrat/extsort
+    https://pkg.go.dev/github.com/lanrat/extsort
+
+
+SECURITY, CONTRIBUTIONS, AND LICENSE
+------------------------------------
+
+Please report any issues via the GitHub Issues tracker. While no major
+features are currently planned, contributions are welcome. Contributions
+should be submitted through GitHub and, if possible, should pass the test
+suite and comply with the project's linting rules.
+
+All code is licensed under the MIT license.
