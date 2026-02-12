@@ -37,7 +37,7 @@ func Test_Program_multiPathStream_Dir_Success(t *testing.T) {
 	require.NotNil(t, paths)
 	require.NotNil(t, errs)
 
-	got := []string{}
+	got := make([]string, 0, len(paths))
 	for p := range paths {
 		got = append(got, p)
 	}
@@ -63,7 +63,7 @@ func Test_Program_multiPathStream_File_Success(t *testing.T) {
 	require.NotNil(t, paths)
 	require.NotNil(t, errs)
 
-	got := []string{}
+	got := make([]string, 0, len(paths))
 	for p := range paths {
 		got = append(got, p)
 	}
@@ -99,7 +99,7 @@ func Test_Program_tarPathStream_Sorted_Success(t *testing.T) {
 	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
 	paths, errs := prog.tarPathStream(t.Context(), "/archive.tar.gz", true, nil)
 
-	got := []string{}
+	got := make([]string, 0, len(paths))
 	for p := range paths {
 		got = append(got, p)
 	}
@@ -121,7 +121,7 @@ func Test_Program_tarPathStream_Unsorted_Success(t *testing.T) {
 	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
 	paths, errs := prog.tarPathStream(t.Context(), "/archive.tar.gz", false, nil)
 
-	got := []string{}
+	got := make([]string, 0, len(paths))
 	for p := range paths {
 		got = append(got, p)
 	}
@@ -268,7 +268,7 @@ func Test_Program_fsPathStream_Sorted_Success(t *testing.T) {
 	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
 	paths, errs := prog.fsPathStream(t.Context(), "/testdir", true, nil)
 
-	got := []string{}
+	got := make([]string, 0, len(paths))
 	for p := range paths {
 		got = append(got, p)
 	}
@@ -492,7 +492,7 @@ func Test_extsortStrings_Success(t *testing.T) {
 
 	out, errs := extsortStrings(t.Context(), in, extErrs, &extSortConfigDefault)
 
-	got := []string{}
+	got := make([]string, 0, len(out))
 	for p := range out {
 		got = append(got, p)
 	}

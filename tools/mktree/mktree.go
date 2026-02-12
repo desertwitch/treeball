@@ -54,7 +54,7 @@ func createDirAndFiles(ctx context.Context, fs afero.Fs, base string, d int, tot
 		if err != nil {
 			return fmt.Errorf("error creating file: %w", err)
 		}
-		fh.Close()
+		_ = fh.Close()
 	}
 
 	return nil

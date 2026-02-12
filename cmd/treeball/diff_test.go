@@ -25,8 +25,8 @@ func createTar(entries []string) []byte {
 		_ = writeDummyFile(tw, name, strings.HasSuffix(name, "/"))
 	}
 
-	tw.Close()
-	gz.Close()
+	_ = tw.Close()
+	_ = gz.Close()
 
 	return buf.Bytes()
 }
