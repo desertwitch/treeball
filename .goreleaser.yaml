@@ -33,7 +33,7 @@ builds:
     - 386
 
 source:
-  enabled: true
+  enabled: false
 
 archives:
   -
@@ -45,12 +45,37 @@ signs:
   - artifacts: checksum
 
 release:
+  draft: true
+  header: |
+    ## Packages
+    | Distribution | Package |
+    |:--|:--|
+    | Debian / Ubuntu | `.deb` |
+    | Fedora / RHEL | `.rpm` |
+    | Arch Linux | `.pkg.tar.zst` |
+    | Generic Linux (Binaries) | `.tar.gz` |
   footer: |
-    Files without an extension are all static binaries for the most common architectures.  
     Most users will want the `linux_amd64` package (see installation instructions in `README`).  
 
     `.txz`, `.asc` and `.md5` files are part of the Slackware distribution package.  
-    These specific packages are offered as a service for fellow Unraid OS enthusiasts.  
+    These specific packages are offered as a service for fellow Unraid OS enthusiasts.
 
-    Do note that any release files are unattended builds and served without any warranties.
+changelog:
+  use: github
+  filters:
+    exclude:
+    - "^Merge"
+    - "\\(ci\\)"
 
+nfpms:
+  - package_name: treeball
+    maintainer: "desertwitch <dezertwitsh@gmail.com>"
+    description: "Creates, diffs, and lists directory trees as archives"
+    vendor: "desertwitch"
+    homepage: "https://github.com/desertwitch/treeball"
+    license: "MIT"
+    section: utils
+    formats:
+      - deb
+      - rpm
+      - archlinux
