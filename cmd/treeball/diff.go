@@ -5,10 +5,14 @@ import (
 	"bufio"
 	"compress/gzip"
 	"context"
+	"errors"
 	"fmt"
+	"io"
+	"io/fs"
 	"path/filepath"
 	"strings"
 
+	"github.com/lanrat/extsort"
 	"github.com/lanrat/extsort/diff"
 )
 
@@ -102,4 +106,178 @@ func (prog *Program) Diff(ctx context.Context, cmpOld string, cmpNew string, out
 	}
 
 	return &result, ErrDiffsFound
+}
+
+func (prog *Program) multiPathStream(ctx context.Context, path string, sort bool, excludes []string) (<-chan string, <-chan error, error) {
+	info, err := prog.fs.Stat(path)
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to stat: %w", err)
+	}
+
+	if info.IsDir() {
+		paths, errs := prog.fsPathStream(ctx, path, sort, excludes)
+
+		return paths, errs, nil
+	}
+
+	paths, errs := prog.tarPathStream(ctx, path, sort, excludes)
+
+	return paths, errs, nil
+}
+
+func (prog *Program) fsPathStream(ctx context.Context, path string, sort bool, excludes []string) (<-chan string, <-chan error) {
+	paths := make(chan string, fsStreamBuffer)
+	errs := make(chan error, 1)
+
+	go func() {
+		defer close(paths)
+		defer close(errs)
+
+		if err := prog.fsWalker.WalkDir(path, func(p string, d fs.DirEntry, err error) error {
+			if err := ctx.Err(); err != nil {
+				return fmt.Errorf("failed to walk filesystem: %w", err)
+			}
+
+			if err != nil {
+				return fmt.Errorf("failed to walk filesystem: %w", err)
+			}
+
+			if p == path {
+				return nil
+			}
+
+			relPath, err := filepath.Rel(path, p)
+			if err != nil {
+				return fmt.Errorf("failed to obtain relative path: %w", err)
+			}
+
+			if excluded, err := isExcluded(relPath, d.IsDir(), excludes); err != nil {
+				return fmt.Errorf("failed to check for exclusion: %w", err)
+			} else if excluded && d.IsDir() {
+				return filepath.SkipDir
+			} else if excluded {
+				return nil
+			}
+
+			relPath = filepath.ToSlash(relPath)
+			if d.IsDir() && !strings.HasSuffix(relPath, "/") {
+				relPath += "/"
+			}
+
+			paths <- relPath
+
+			return nil
+		}); err != nil {
+			errs <- fmt.Errorf("failed to stream from fs: %w", err)
+		}
+	}()
+
+	if !sort {
+		return paths, errs
+	}
+
+	return extsortStrings(ctx, paths, errs, prog.extSortConfig)
+}
+
+func (prog *Program) tarPathStream(ctx context.Context, path string, sort bool, excludes []string) (<-chan string, <-chan error) {
+	paths := make(chan string, tarStreamBuffer)
+	errs := make(chan error, 1)
+
+	go func() {
+		defer close(paths)
+		defer close(errs)
+
+		f, err := prog.fs.Open(path)
+		if err != nil {
+			errs <- fmt.Errorf("failed to open input file: %w", err)
+
+			return
+		}
+		defer f.Close()
+
+		gz, err := gzip.NewReader(f)
+		if err != nil {
+			errs <- fmt.Errorf("failed to initialize gzip reader: %w", err)
+
+			return
+		}
+		defer gz.Close()
+
+		tr := tar.NewReader(gz)
+		tarExcl := &treeExcluder{excludes: excludes}
+		for {
+			if err := ctx.Err(); err != nil {
+				errs <- fmt.Errorf("failed to stream from tar: %w", err)
+
+				return
+			}
+
+			hdr, err := tr.Next()
+			if err != nil {
+				if !errors.Is(err, io.EOF) {
+					errs <- fmt.Errorf("failed to stream from tar: %w", err)
+
+					return
+				}
+
+				break // EOF
+			}
+
+			if excluded, err := tarExcl.isExcluded(hdr.Name, strings.HasSuffix(hdr.Name, "/")); err != nil {
+				errs <- fmt.Errorf("failed to check for exclusion: %w", err)
+
+				return
+			} else if !excluded {
+				paths <- hdr.Name
+			}
+		}
+	}()
+
+	if !sort {
+		return paths, errs
+	}
+
+	return extsortStrings(ctx, paths, errs, prog.extSortConfig)
+}
+
+// extsortStrings wraps [extsort.Strings] for internal use.
+//
+// It merges two possible error sources into a single channel:
+//  1. Runtime sorting errors - any errors raised while sorting proceeds.
+//  2. extErrs (optional) - errors from non-sorting work such as tar-reading.
+//
+// Do note that only the first error observed from these sources is sent downstream.
+func extsortStrings(ctx context.Context, input <-chan string, extErrs <-chan error, config *extsort.Config) (<-chan string, <-chan error) {
+	sorter, sorterOut, sorterErrs := extsort.Strings(input, config)
+
+	if sorter != nil {
+		go sorter.Sort(ctx)
+	}
+
+	mergedErrs := make(chan error, 1)
+	go func() {
+		defer close(mergedErrs)
+
+		for extErrs != nil || sorterErrs != nil {
+			select {
+			case err, ok := <-extErrs:
+				if ok && err != nil {
+					mergedErrs <- err
+
+					return
+				}
+				extErrs = nil // channel closed, disable case.
+
+			case err, ok := <-sorterErrs:
+				if ok && err != nil {
+					mergedErrs <- err
+
+					return
+				}
+				sorterErrs = nil // channel closed, disable case.
+			}
+		}
+	}()
+
+	return sorterOut, mergedErrs
 }

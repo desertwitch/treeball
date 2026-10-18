@@ -25,6 +25,7 @@ Exit Codes:
 package main
 
 import (
+	"bufio"
 	"compress/gzip"
 	"context"
 	"errors"
@@ -34,6 +35,7 @@ import (
 	"os/signal"
 	"runtime"
 	"runtime/debug"
+	"strings"
 	"syscall"
 	"time"
 
@@ -79,6 +81,13 @@ var (
 	// ErrDiffsFound is an exit-code relevant sentinel error.
 	ErrDiffsFound = errors.New("differences were found")
 )
+
+// GzipConfig is the configuration for concurrent gzip operations.
+type GzipConfig struct {
+	BlockSize        int // Approximate size of blocks (pgzip operations)
+	BlockCount       int // Amount of blocks processing in parallel (pgzip operations)
+	CompressionLevel int // Target level for compression (0: none to 9: highest)
+}
 
 // Program is the primary structure of the application.
 type Program struct {
@@ -132,6 +141,37 @@ func NewProgram(fs afero.Fs, stdout io.Writer, stderr io.Writer, gzipConfig *Gzi
 		gzipConfig:    gzipConfig,
 		extSortConfig: extsortConfig,
 	}
+}
+
+func (prog *Program) mergeExcludes(excludeSlice []string, excludeFile string) ([]string, error) {
+	excludes := []string{}
+
+	if excludeFile != "" {
+		file, err := prog.fs.Open(excludeFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to open exclude file: %w", err)
+		}
+		defer file.Close()
+
+		scanner := bufio.NewScanner(file)
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+
+			if line == "" || strings.HasPrefix(line, "#") {
+				continue
+			}
+
+			excludes = append(excludes, line)
+		}
+
+		if err := scanner.Err(); err != nil {
+			return nil, fmt.Errorf("failed reading exclude file: %w", err)
+		}
+	}
+
+	excludes = append(excludes, excludeSlice...)
+
+	return excludes, nil
 }
 
 func newRootCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Writer) *cobra.Command {
