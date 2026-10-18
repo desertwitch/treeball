@@ -6,3 +6,7 @@
 /TODO
 # Added by goreleaser init:
 dist/
+
+docs/completions
+docs/man/*
+!docs/man/*.adoc

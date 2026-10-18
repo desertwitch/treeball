@@ -136,13 +136,12 @@ func NewProgram(fs afero.Fs, stdout io.Writer, stderr io.Writer, gzipConfig *Gzi
 
 func newRootCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Writer) *cobra.Command {
 	rootCmd := &cobra.Command{
-		Use:               "treeball",
-		Short:             rootHelpShort,
-		Long:              rootHelpLong,
-		Version:           Version,
-		SilenceErrors:     true,
-		SilenceUsage:      true,
-		CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: true},
+		Use:           "treeball",
+		Short:         rootHelpShort,
+		Long:          rootHelpLong,
+		Version:       Version,
+		SilenceErrors: true,
+		SilenceUsage:  true,
 	}
 	rootCmd.SetOut(stdout)
 	rootCmd.SetErr(stderr)
