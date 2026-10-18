@@ -1,0 +1,250 @@
+= treeball(1)
+
+== NAME
+
+treeball - create, diff and list directory trees as archives
+
+== SYNOPSIS
+
+*treeball create* [_flags_] _root-folder_ _output.tar.gz_
+
+*treeball diff* [_flags_] _old_ _new_ _diff.tar.gz_
+
+*treeball list* [_flags_] _input.tar.gz_
+
+== DESCRIPTION
+
+treeball preserves directory trees as compressed tar archives, replacing all
+files with zero-byte placeholder files. The resulting tarballs keep every path,
+directory and filename, but none of the file contents, making them lightweight,
+portable, browsable with any archive viewer, and diffable. Think of browsable
+inventory-type backups of e.g. media libraries, without the overhead of
+preserving the data itself.
+
+An important step in recovering from catastrophic data loss is knowing what was
+there in the first place. A treeball can be browsed like the original
+filesystem, compared against an older or newer state to find added or lost
+paths, and extracted to recreate the structure as stubs for recovery planning.
+
+treeball streams all data and uses external sorting, so memory use stays low
+and predictable even for trees with hundreds of millions of files.
+
+== GLOBAL FLAGS
+
+*-h, --help*::
+  Show help for treeball or the given command.
+*-v, --version*::
+  Print the program version.
+
+== COMMANDS
+
+=== treeball create
+
+Builds a tarball from the directory tree at _root-folder_. Every file is stored
+as a zero-byte placeholder; directories are stored as directory entries. Each
+path written to the archive is also printed to standard output.
+
+The archive is first written to a temporary file next to _output.tar.gz_ and
+only moved into place once complete. A failed or interrupted run therefore
+never leaves a truncated archive behind, and never replaces or deletes an
+existing file at _output.tar.gz_. If _output.tar.gz_ lies inside _root-folder_,
+it is not included in the archive.
+
+*--exclude* _pattern_::
+  Pattern to exclude; can be repeated multiple times.
+*--excludes-from* _path_::
+  Path to a file containing exclude patterns, one per line.
+*--compression* _int_::
+  Level of compression, 0 (none) to 9 (highest) (default 9).
+*--blocksize* _int_::
+  Block size in bytes for parallel compression (default 1048576).
+*--blockcount* _int_::
+  Number of blocks to compress in parallel (default *GOMAXPROCS*).
+
+=== treeball diff
+
+Compares the structure of two sources and writes a diff tarball containing only
+the paths that were added or removed between _old_ and _new_. Each source can
+be either a directory or a treeball (*.tar.gz*), so tar vs. tar, tar vs.
+directory, directory vs. tar and directory vs. directory comparisons are all
+supported.
+
+Every difference is also printed to standard output, prefixed with
+`pass:[+++ ]` (added) or `pass:[--- ]` (removed). If no differences are found,
+no diff tarball is written and any existing file at _diff.tar.gz_ is left
+untouched. Use */dev/null* as _diff.tar.gz_ to only see the differences in the
+terminal.
+
+*--exclude* _pattern_::
+  Pattern to exclude; can be repeated multiple times.
+  Applied to both sources alike.
+*--excludes-from* _path_::
+  Path to a file containing exclude patterns, one per line.
+*--compression* _int_::
+  Level of compression, 0 (none) to 9 (highest) (default 9).
+*--tmpdir* _path_::
+  On-disk location for external sorting (default: automatic selection,
+  falling back to the system's temporary directory).
+*--workers* _int_::
+  Workers for concurrent sorting and diffing
+  (default: the smaller of 4 and *GOMAXPROCS*).
+*--chunksize* _int_::
+  Maximum in-memory records per worker before spilling to disk
+  (default 100000).
+
+=== treeball list
+
+Prints all paths contained in a treeball to standard output, one per line.
+Directories are printed with a trailing `/`.
+
+*--sort*::
+  Sort the output alphabetically (default true). Use *--sort=false* to print
+  the paths in their original archive order, which is faster.
+*--exclude* _pattern_::
+  Pattern to exclude; can be repeated multiple times.
+*--excludes-from* _path_::
+  Path to a file containing exclude patterns, one per line.
+*--tmpdir* _path_::
+  On-disk location for external sorting (default: automatic selection,
+  falling back to the system's temporary directory).
+*--workers* _int_::
+  Workers for concurrent sorting (default: the smaller of 4 and *GOMAXPROCS*).
+*--chunksize* _int_::
+  Maximum in-memory records per worker before spilling to disk
+  (default 100000).
+
+== EXCLUDE PATTERNS
+
+Exclude patterns are always relative to the given source. With _/mnt/user_ as
+source, the pattern `a.txt` excludes _/mnt/user/a.txt_. Patterns given with
+*--exclude* and loaded with *--excludes-from* are merged together. In exclude
+files, empty lines and lines starting with `#` are ignored.
+
+Patterns follow the *doublestar* format and are matched against the whole
+relative path, not just the file name:
+
+`pass:[*.nfo]`::
+  Matches _.nfo_ files in the top-level directory only.
+`pass:[**/*.nfo]`::
+  Matches _.nfo_ files at any depth.
+`pass:[@eaDir]`::
+  Matches the top-level entry named _@eaDir_ (file or directory).
+`pass:[**/@eaDir/]`::
+  A trailing `/` restricts the pattern to directories, at any depth.
+
+Excluding a directory also excludes everything inside it. This applies equally
+to directories and to tarballs, so the same patterns select the same paths
+regardless of the kind of source. A leading `/` in a pattern is ignored.
+
+Pattern syntax reference:
+https://github.com/bmatcuk/doublestar#patterns
+
+== EXIT CODES
+
+*0*::
+  Success. For *diff*: no differences were found.
+*1*::
+  Differences were found (*diff* only).
+*2*::
+  Failure. Invalid arguments, missing sources, I/O errors, or interruption.
+
+Interrupting treeball with *SIGINT* or *SIGTERM* is safe. The running operation
+is cancelled, its partially written output is discarded, and any existing output
+file is left untouched. If the operation does not stop within 10 seconds, the
+process exits regardless ("interrupted (killed)"); in that case a temporary
+output file may remain.
+
+== OUTPUT STREAMS
+
+The result of each command is written to standard output (*stdout*): the
+archived paths for *create*, the differences for *diff* and the contained paths
+for *list*. Errors and operational messages are written to standard error
+(*stderr*). The output is plain and line-based, intended for further processing
+in scripts and pipelines.
+
+== FILES
+
+_output.tar.gz_::
+  A treeball: a gzip-compressed tar archive with one entry per path. Files are
+  zero-byte placeholders; directory entries end in `/`. Entries carry fixed
+  permissions (0666 for files, 0777 for directories) and no meaningful
+  timestamps, ownership or other metadata of the original files.
+_diff.tar.gz_::
+  A diff treeball. Added paths are placed below a synthetic `pass:[+++]`
+  directory and removed paths below a synthetic `pass:[---]` directory,
+  each keeping their full relative path.
+*.*__name__*.*__random__*.tmp*::
+  Temporary output file, next to the requested output path. Renamed to the
+  final name on success and removed on failure.
+_excludes.txt_::
+  Optional exclude pattern file, passed via *--excludes-from*.
+
+== PERFORMANCE
+
+Sorting for *diff* and sorted *list* uses an external sort: once a worker holds
+*--chunksize* records in memory, further data is off-loaded to temporary files
+in *--tmpdir*. For very large trees this data can peak at several gigabytes, so
+*--tmpdir* should point to fast storage with sufficient free space. Lower
+*--chunksize* values reduce memory use at the cost of more disk activity.
+
+The archive size is dominated by path lengths. Compression level 9 (the
+default) produces the smallest archives; lower levels are considerably faster
+for *create* at the cost of somewhat larger files.
+
+== EXAMPLES
+
+Archive a directory tree:
+
+  treeball create /mnt/media media.tar.gz
+
+Archive with exclusions, inline and from a file:
+
+  treeball create /mnt/media media.tar.gz --exclude='**/@eaDir/'
+  treeball create /mnt/media media.tar.gz --excludes-from=./excludes.txt
+
+Compare an older treeball against the current state of a directory:
+
+  treeball diff media-old.tar.gz /mnt/media diff.tar.gz
+
+Only show the differences, without writing a diff tarball:
+
+  treeball diff media-old.tar.gz media-new.tar.gz /dev/null
+
+Use fast scratch storage for sorting massive archives:
+
+  treeball diff old.tar.gz new.tar.gz diff.tar.gz --tmpdir=/mnt/nvme/tmp
+
+List a treeball in sorted and in original order:
+
+  treeball list media.tar.gz
+  treeball list media.tar.gz --sort=false
+
+== LIMITATIONS
+
+treeball records the structure of a tree, not its contents. File data, sizes,
+permissions, ownership and timestamps are not preserved; a diff therefore
+detects added and removed paths, not modified files.
+
+Symbolic links are not followed; they are recorded as placeholder files under
+their own name. Other special files (devices, sockets, FIFOs) are likewise
+recorded as placeholder files.
+
+Any error while reading the source tree, such as a directory without read
+permission, aborts the operation. Exclude such directories, or run treeball as
+a user permitted to read the whole tree.
+
+Paths are compared byte by byte. Names that differ only in Unicode
+normalization (e.g. composed vs. decomposed forms, as produced by some macOS
+filesystems) are treated as different paths.
+
+== SEE ALSO
+
+*tar*(1), *gzip*(1), *tree*(1), *crontab*(5)
+
+https://github.com/desertwitch/treeball
+
+== VERSION
+
+This document was last changed on: *{docdate} {doctime}*
+
+This document was built for program version (or commit): *{version}*
