@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/tar"
+	"bufio"
 	"compress/gzip"
 	"context"
 	"fmt"
@@ -30,30 +31,26 @@ import (
 //
 // The ctx parameter controls early cancellation.
 func (prog *Program) Diff(ctx context.Context, cmpOld string, cmpNew string, output string, excludes []string) (*diff.Result, error) { //nolint:unparam
-	var hasDifferences bool
 	var oldStream, newStream <-chan string
 	var oldErrs, newErrs <-chan error
 
-	out, err := prog.fs.Create(output)
+	out, err := createAtomic(prog.fs, output)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create output file: %w", err)
+		return nil, err
 	}
-
-	defer func() {
-		if !hasDifferences {
-			_ = prog.fs.Remove(output)
-		}
-	}()
-	defer out.Close()
+	defer out.Abort()
 
 	gw, err := gzip.NewWriterLevel(out, prog.gzipConfig.CompressionLevel)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize gzip writer: %w", err)
 	}
-	defer gw.Close()
+	defer gw.Close() // only for early returns; checked explicitly below
 
 	tw := tar.NewWriter(gw)
-	defer tw.Close()
+	defer tw.Close() // only for early returns; checked explicitly below
+
+	stdout := bufio.NewWriterSize(prog.stdout, 64<<10) //nolint:mnd
+	defer stdout.Flush()
 
 	if oldStream, oldErrs, err = prog.multiPathStream(ctx, cmpOld, true, excludes); err != nil {
 		return nil, fmt.Errorf("failed to establish stream: %w", err)
@@ -69,13 +66,13 @@ func (prog *Program) Diff(ctx context.Context, cmpOld string, cmpNew string, out
 		func(delta diff.Delta, item string) error {
 			switch delta {
 			case diff.OLD:
-				fmt.Fprintf(prog.stdout, "--- %s\n", item)
+				fmt.Fprintf(stdout, "--- %s\n", item)
 
 				isDir := strings.HasSuffix(item, "/")
 
 				return writeDummyFile(tw, filepath.Join("---", item), isDir)
 			case diff.NEW:
-				fmt.Fprintf(prog.stdout, "+++ %s\n", item)
+				fmt.Fprintf(stdout, "+++ %s\n", item)
 
 				isDir := strings.HasSuffix(item, "/")
 
@@ -89,11 +86,20 @@ func (prog *Program) Diff(ctx context.Context, cmpOld string, cmpNew string, out
 		return nil, fmt.Errorf("failure during diff: %w", err)
 	}
 
-	if result.ExtraA > 0 || result.ExtraB > 0 {
-		hasDifferences = true
-
-		return &result, ErrDiffsFound
+	if result.ExtraA == 0 && result.ExtraB == 0 {
+		return &result, nil // no differences: temporary file is discarded
 	}
 
-	return &result, nil
+	// Closing flushes the remaining buffered data; errors here mean a broken archive.
+	if err := tw.Close(); err != nil {
+		return nil, fmt.Errorf("failed to finalize tar stream: %w", err)
+	}
+	if err := gw.Close(); err != nil {
+		return nil, fmt.Errorf("failed to finalize gzip stream: %w", err)
+	}
+	if err := out.Commit(); err != nil {
+		return nil, err
+	}
+
+	return &result, ErrDiffsFound
 }

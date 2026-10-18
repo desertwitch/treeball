@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 )
@@ -14,8 +15,11 @@ import (
 func (prog *Program) List(ctx context.Context, input string, sort bool, excludes []string) error {
 	paths, errs := prog.tarPathStream(ctx, input, sort, excludes)
 
+	stdout := bufio.NewWriterSize(prog.stdout, 64<<10) //nolint:mnd
+	defer stdout.Flush()
+
 	for path := range paths {
-		fmt.Fprintln(prog.stdout, path)
+		fmt.Fprintln(stdout, path)
 	}
 
 	for err := range errs {

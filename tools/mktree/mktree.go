@@ -73,9 +73,7 @@ func createDummyTree(ctx context.Context, fs afero.Fs, base string, totalFiles i
 	dirsNeeded := (totalFiles + filesPerDir - 1) / filesPerDir
 
 	for range workers {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			for d := range tasks {
 				if err := createDirAndFiles(ctx, fs, base, d, totalFiles); err != nil {
 					once.Do(func() {
@@ -86,7 +84,7 @@ func createDummyTree(ctx context.Context, fs afero.Fs, base string, totalFiles i
 					return
 				}
 			}
-		}()
+		})
 	}
 
 	go func() {

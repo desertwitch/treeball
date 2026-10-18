@@ -24,6 +24,15 @@ func (e errorFs) Create(name string) (afero.File, error) {
 	return nil, errors.New("simulated create failure")
 }
 
+// A helper function for tests to simulate file creation failure (via OpenFile).
+func (e errorFs) OpenFile(name string, flag int, perm os.FileMode) (afero.File, error) {
+	if flag&os.O_CREATE != 0 {
+		return nil, errors.New("simulated create failure")
+	}
+
+	return e.Fs.OpenFile(name, flag, perm) //nolint:wrapcheck
+}
+
 // A helper function for tests to simulate file opening failure.
 func (e errorFs) Open(name string) (afero.File, error) {
 	return nil, errors.New("simulated open failure")
