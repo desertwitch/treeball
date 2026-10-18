@@ -254,3 +254,45 @@ func Test_relToRoot_RelativePaths(t *testing.T) {
 	require.Equal(t, "out.tar.gz", relToRoot(filepath.Join(dir, "src"), "./src/out.tar.gz"))
 	require.Empty(t, relToRoot("src", "out.tar.gz"))
 }
+
+// Expectation: Devices like /dev/null work as output and are never replaced or removed.
+func Test_Program_DevNullOutput(t *testing.T) {
+	if _, err := os.Stat(os.DevNull); err != nil || os.DevNull != "/dev/null" {
+		t.Skip("no /dev/null on this platform")
+	}
+
+	dir := t.TempDir()
+	writeTree(t, afero.NewOsFs(), dir, []string{"a/x", "b/x", "b/y"})
+	a, b := filepath.Join(dir, "a"), filepath.Join(dir, "b")
+	prog := NewProgram(afero.NewOsFs(), &bytes.Buffer{}, &bytes.Buffer{}, nil, nil)
+
+	_, err := prog.Diff(t.Context(), a, b, os.DevNull, nil)
+	require.ErrorIs(t, err, ErrDiffsFound)
+	_, err = prog.Diff(t.Context(), a, a, os.DevNull, nil)
+	require.NoError(t, err)
+	require.NoError(t, prog.Create(t.Context(), a, os.DevNull, nil))
+	require.Error(t, prog.Create(t.Context(), filepath.Join(dir, "missing"), os.DevNull, nil))
+
+	info, err := os.Lstat(os.DevNull)
+	require.NoError(t, err)
+	require.Equal(t, os.ModeDevice|os.ModeCharDevice, info.Mode().Type())
+}
+
+// Expectation: An output path that is a symlink is written through, keeping the symlink.
+func Test_Program_Create_SymlinkOutput_WrittenThrough(t *testing.T) {
+	dir := t.TempDir()
+	writeTree(t, afero.NewOsFs(), dir, []string{"src/a.txt"})
+	target, link := filepath.Join(dir, "target.tar.gz"), filepath.Join(dir, "link.tar.gz")
+	require.NoError(t, os.WriteFile(target, []byte("old"), 0o600))
+	if err := os.Symlink(target, link); err != nil {
+		t.Skip("symlinks not supported")
+	}
+
+	fs := afero.NewOsFs()
+	require.NoError(t, NewProgram(fs, &bytes.Buffer{}, &bytes.Buffer{}, nil, nil).Create(t.Context(), filepath.Join(dir, "src"), link, nil))
+
+	info, err := os.Lstat(link)
+	require.NoError(t, err)
+	require.Equal(t, os.ModeSymlink, info.Mode().Type(), "symlink must not be replaced")
+	require.Equal(t, []string{"a.txt"}, listArchive(t, fs, target, true, nil, nil))
+}
