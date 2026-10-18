@@ -57,10 +57,10 @@ func (prog *Program) Diff(ctx context.Context, cmpOld string, cmpNew string, out
 	defer stdout.Flush()
 
 	if oldStream, oldErrs, err = prog.multiPathStream(ctx, cmpOld, true, excludes); err != nil {
-		return nil, fmt.Errorf("failed to establish stream: %w", err)
+		return nil, fmt.Errorf("failed to establish old stream: %w", err)
 	}
 	if newStream, newErrs, err = prog.multiPathStream(ctx, cmpNew, true, excludes); err != nil {
-		return nil, fmt.Errorf("failed to establish stream: %w", err)
+		return nil, fmt.Errorf("failed to establish new stream: %w", err)
 	}
 
 	result, err := diff.Strings(

@@ -37,7 +37,6 @@ import (
 	"runtime/debug"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/lanrat/extsort"
 	"github.com/spf13/afero"
@@ -54,8 +53,6 @@ const (
 	exitCodeSuccess    int = 0
 	exitCodeDiffsFound int = 1
 	exitCodeFailure    int = 2
-
-	exitTimeout time.Duration = 10 * time.Second
 )
 
 var (
@@ -308,65 +305,35 @@ func newListCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Wr
 	return listCmd
 }
 
-// main runs the root command in a separate goroutine, so that it can react to
-// SIGINT and SIGTERM by cancelling the work, and still exit after [exitTimeout]
-// should the work not stop in time. The outcome is mapped to the exit codes.
 func main() {
 	var exitCode int
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Fprintf(os.Stderr, "panic: %v\n\n", r)
+			fmt.Fprintf(os.Stderr,
+				"Program crashed due to a panic (report to developers): \n\n%v\n\n", r)
 			debug.PrintStack()
 			exitCode = exitCodeFailure
 		}
 		os.Exit(exitCode)
 	}()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx, stop := signal.NotifyContext(context.Background(),
+		os.Interrupt, syscall.SIGTERM, syscall.SIGPIPE)
+	defer stop()
 
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	rootCmd := newRootCmd(ctx, afero.NewOsFs(), os.Stdout, os.Stderr)
 
-	sigChan2 := make(chan os.Signal, 1)
-	signal.Notify(sigChan2, syscall.SIGUSR1)
-
-	go func() {
-		for range sigChan2 {
-			debug.PrintStack()
-		}
-	}()
-
-	errChan := make(chan error, 1)
-	go func() {
-		rootCmd := newRootCmd(ctx, afero.NewOsFs(), os.Stdout, os.Stderr)
-		errChan <- rootCmd.Execute()
-	}()
-
-	select {
-	case err := <-errChan:
-		if err != nil {
-			if errors.Is(err, ErrDiffsFound) {
-				exitCode = exitCodeDiffsFound
-			} else {
-				exitCode = exitCodeFailure
-				fmt.Fprintf(os.Stderr, "error: %v\n", err)
-			}
+	err := rootCmd.Execute()
+	if err != nil {
+		if errors.Is(err, ErrDiffsFound) {
+			exitCode = exitCodeDiffsFound
 		} else {
-			exitCode = exitCodeSuccess
+			exitCode = exitCodeFailure
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		}
 
-	case <-sigChan:
-		fmt.Fprintln(os.Stderr, "interrupting...")
-		cancel()
-
-		select {
-		case <-errChan:
-			exitCode = exitCodeFailure
-			fmt.Fprintln(os.Stderr, "interrupted (exited)")
-		case <-time.After(exitTimeout):
-			exitCode = exitCodeFailure
-			fmt.Fprintln(os.Stderr, "interrupted (killed)")
-		}
+		return
 	}
+
+	exitCode = exitCodeSuccess
 }
