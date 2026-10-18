@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -94,6 +95,63 @@ func isExcluded(path string, isDir bool, excludes []string) (bool, error) {
 			}
 
 			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+// treeExcluder applies excludes to a flat list of archive paths the same way
+// they apply to a filesystem walk: on a walk, an excluded directory is skipped
+// with all of its contents, so here an entry is also excluded when any of its
+// parent directories is. The verdict for the most recent parent directory is
+// cached, as consecutive archive entries mostly share the same parent.
+type treeExcluder struct {
+	excludes []string
+
+	lastParent         string
+	lastParentExcluded bool
+}
+
+func (e *treeExcluder) isExcluded(name string, isDir bool) (bool, error) {
+	if len(e.excludes) == 0 {
+		return false, nil
+	}
+
+	parent := path.Dir(strings.TrimSuffix(name, "/"))
+
+	if parent != e.lastParent {
+		excluded, err := e.anyAncestorExcluded(parent)
+		if err != nil {
+			return false, err
+		}
+		e.lastParent, e.lastParentExcluded = parent, excluded
+	}
+
+	if e.lastParentExcluded {
+		return true, nil
+	}
+
+	return isExcluded(name, isDir, e.excludes)
+}
+
+// anyAncestorExcluded reports whether dir ("a/b/c") or any of its ancestors ("a", "a/b") is excluded.
+func (e *treeExcluder) anyAncestorExcluded(dir string) (bool, error) {
+	if dir == "." || dir == "/" {
+		return false, nil
+	}
+
+	for i := 0; i <= len(dir); i++ {
+		if i < len(dir) && dir[i] != '/' {
+			continue
+		}
+		if i == 0 {
+			continue
+		}
+
+		excluded, err := isExcluded(dir[:i], true, e.excludes)
+		if err != nil || excluded {
+			return excluded, err
 		}
 	}
 
@@ -256,6 +314,7 @@ func (prog *Program) tarPathStream(ctx context.Context, path string, sort bool, 
 		defer gz.Close()
 
 		tr := tar.NewReader(gz)
+		tarExcl := &treeExcluder{excludes: excludes}
 		for {
 			if err := ctx.Err(); err != nil {
 				errs <- fmt.Errorf("failed to stream from tar: %w", err)
@@ -274,7 +333,7 @@ func (prog *Program) tarPathStream(ctx context.Context, path string, sort bool, 
 				break // EOF
 			}
 
-			if excluded, err := isExcluded(hdr.Name, strings.HasSuffix(hdr.Name, "/"), excludes); err != nil {
+			if excluded, err := tarExcl.isExcluded(hdr.Name, strings.HasSuffix(hdr.Name, "/")); err != nil {
 				errs <- fmt.Errorf("failed to check for exclusion: %w", err)
 
 				return

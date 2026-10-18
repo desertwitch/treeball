@@ -30,7 +30,7 @@ import (
 //   - (nil, error): for any other failure (I/O, gzip, comparison error, etc.)
 //
 // The ctx parameter controls early cancellation.
-func (prog *Program) Diff(ctx context.Context, cmpOld string, cmpNew string, output string, excludes []string) (*diff.Result, error) { //nolint:unparam
+func (prog *Program) Diff(ctx context.Context, cmpOld string, cmpNew string, output string, excludes []string) (*diff.Result, error) {
 	var oldStream, newStream <-chan string
 	var oldErrs, newErrs <-chan error
 
