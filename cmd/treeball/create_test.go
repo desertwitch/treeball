@@ -76,6 +76,14 @@ func (e fullDiskFs) OpenFile(name string, flag int, perm os.FileMode) (afero.Fil
 	return fullDiskFile{f}, nil
 }
 
+// A helper writer for tests to simulate writing errors.
+type errorWriter struct{}
+
+// A helper function for tests to simulate writing failure.
+func (errorWriter) Write(p []byte) (int, error) {
+	return 0, errors.New("simulated write failure")
+}
+
 // Expectation: A tarball should be created with all given paths contained.
 func Test_Program_Create_Success(t *testing.T) {
 	fs := afero.NewMemMapFs()
@@ -480,4 +488,82 @@ func Test_Program_Create_CtxCancel_Error(t *testing.T) {
 
 	_, err := fs.Stat("/out.tar.gz")
 	require.ErrorIs(t, err, os.ErrNotExist)
+}
+
+// Expectation: Only targets inside the root should resolve, not look-alike siblings or the root itself.
+func Test_relToRoot_Table(t *testing.T) {
+	tests := []struct {
+		root, target, want string
+	}{
+		{"/src", "/src/out.tar.gz", "out.tar.gz"},
+		{"/src", "/src/sub/out.tar.gz", filepath.Join("sub", "out.tar.gz")},
+		{"/src/", "/src/./sub/../out.tar.gz", "out.tar.gz"},
+		{"/src", "/src", ""},
+		{"/src", "/out.tar.gz", ""},
+		{"/src", "/src2/out.tar.gz", ""}, // shared string prefix, but a sibling
+		{"/src", "/src/../out.tar.gz", ""},
+		{"/", "/out.tar.gz", "out.tar.gz"},
+	}
+
+	for _, tt := range tests {
+		require.Equal(t, tt.want, relToRoot(tt.root, tt.target), "relToRoot(%q, %q)", tt.root, tt.target)
+	}
+}
+
+// Expectation: Relative and absolute spellings of the same location should be recognized as such.
+func Test_relToRoot_RelativePaths_Success(t *testing.T) {
+	dir := t.TempDir()
+	t.Chdir(dir)
+
+	require.Equal(t, "out.tar.gz", relToRoot("src", filepath.Join(dir, "src", "out.tar.gz")))
+	require.Equal(t, "out.tar.gz", relToRoot(filepath.Join(dir, "src"), "./src/out.tar.gz"))
+	require.Empty(t, relToRoot("src", "out.tar.gz"))
+}
+
+// Expectation: The tar buffer should contain the appropriate files and folders.
+func Test_writeDummyFile_Success(t *testing.T) {
+	var buf bytes.Buffer
+
+	tw := tar.NewWriter(&buf)
+	require.NotNil(t, tw)
+
+	require.NoError(t, writeDummyFile(tw, "foo.txt", false))
+	require.NoError(t, writeDummyFile(tw, "bar", true))
+	require.NoError(t, tw.Close())
+
+	tr := tar.NewReader(&buf)
+	require.NotNil(t, tr)
+
+	var names []string
+	for {
+		hdr, err := tr.Next()
+
+		if err == io.EOF {
+			break
+		}
+
+		require.NoError(t, err)
+		require.Zero(t, hdr.Size)
+
+		if strings.HasSuffix(hdr.Name, "/") {
+			require.Equal(t, tar.TypeDir, rune(hdr.Typeflag))
+			require.Equal(t, baseFolderPerms, hdr.Mode)
+		} else {
+			require.Equal(t, tar.TypeReg, rune(hdr.Typeflag))
+			require.Equal(t, baseFilePerms, hdr.Mode)
+		}
+
+		names = append(names, hdr.Name)
+	}
+
+	require.Equal(t, []string{"foo.txt", "bar/"}, names)
+}
+
+// Expectation: The function should return the correct error on header write failure.
+func Test_writeDummyFile_WriteHeader_Error(t *testing.T) {
+	tw := tar.NewWriter(errorWriter{})
+	err := writeDummyFile(tw, "fail.txt", false)
+
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "header")
 }

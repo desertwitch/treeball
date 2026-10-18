@@ -108,6 +108,10 @@ func (prog *Program) Diff(ctx context.Context, cmpOld string, cmpNew string, out
 	return &result, ErrDiffsFound
 }
 
+// multiPathStream streams the relative paths of a source, choosing the source
+// type by itself: directories are streamed with [Program.fsPathStream], anything
+// else is treated as a tarball and streamed with [Program.tarPathStream].
+// An error is only returned directly when the source cannot be stat'ed.
 func (prog *Program) multiPathStream(ctx context.Context, path string, sort bool, excludes []string) (<-chan string, <-chan error, error) {
 	info, err := prog.fs.Stat(path)
 	if err != nil {
@@ -125,6 +129,11 @@ func (prog *Program) multiPathStream(ctx context.Context, path string, sort bool
 	return paths, errs, nil
 }
 
+// fsPathStream walks the directory tree at path and streams the paths of all
+// contained entries relative to it, with directories ending in "/". Excluded
+// directories are skipped with all of their contents. If sort is true, the paths
+// are passed through [extsortStrings] before streaming. The first walk error is
+// sent on the error channel; both channels are closed once streaming ends.
 func (prog *Program) fsPathStream(ctx context.Context, path string, sort bool, excludes []string) (<-chan string, <-chan error) {
 	paths := make(chan string, fsStreamBuffer)
 	errs := make(chan error, 1)
@@ -179,6 +188,11 @@ func (prog *Program) fsPathStream(ctx context.Context, path string, sort bool, e
 	return extsortStrings(ctx, paths, errs, prog.extSortConfig)
 }
 
+// tarPathStream reads the tarball at path and streams the names of all contained
+// entries, in archive order or sorted through [extsortStrings] if sort is true.
+// Excludes are applied with a [treeExcluder], so they select the same entries as
+// on a filesystem walk. The first read error is sent on the error channel; both
+// channels are closed once streaming ends.
 func (prog *Program) tarPathStream(ctx context.Context, path string, sort bool, excludes []string) (<-chan string, <-chan error) {
 	paths := make(chan string, tarStreamBuffer)
 	errs := make(chan error, 1)

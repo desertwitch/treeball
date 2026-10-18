@@ -143,6 +143,9 @@ func NewProgram(fs afero.Fs, stdout io.Writer, stderr io.Writer, gzipConfig *Gzi
 	}
 }
 
+// mergeExcludes combines the exclude patterns read from excludeFile (if given)
+// with those of excludeSlice, file patterns first. In the file, blank lines and
+// lines starting with "#" are ignored. The result is never nil.
 func (prog *Program) mergeExcludes(excludeSlice []string, excludeFile string) ([]string, error) {
 	excludes := []string{}
 
@@ -174,6 +177,8 @@ func (prog *Program) mergeExcludes(excludeSlice []string, excludeFile string) ([
 	return excludes, nil
 }
 
+// newRootCmd returns the root command with the create, diff and list
+// subcommands attached, writing to the given stdout and stderr.
 func newRootCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Writer) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:           "treeball",
@@ -195,6 +200,7 @@ func newRootCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Wr
 	return rootCmd
 }
 
+// newCreateCmd returns the create command and its flags, running [Program.Create].
 func newCreateCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Writer) *cobra.Command {
 	var excludes []string
 	var excludesFile string
@@ -228,6 +234,7 @@ func newCreateCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.
 	return createCmd
 }
 
+// newDiffCmd returns the diff command and its flags, running [Program.Diff].
 func newDiffCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Writer) *cobra.Command {
 	var excludes []string
 	var excludesFile string
@@ -265,6 +272,7 @@ func newDiffCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Wr
 	return diffCmd
 }
 
+// newListCmd returns the list command and its flags, running [Program.List].
 func newListCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Writer) *cobra.Command {
 	var excludes []string
 	var excludesFile string
@@ -300,6 +308,9 @@ func newListCmd(ctx context.Context, fs afero.Fs, stdout io.Writer, stderr io.Wr
 	return listCmd
 }
 
+// main runs the root command in a separate goroutine, so that it can react to
+// SIGINT and SIGTERM by cancelling the work, and still exit after [exitTimeout]
+// should the work not stop in time. The outcome is mapped to the exit codes.
 func main() {
 	var exitCode int
 	defer func() {

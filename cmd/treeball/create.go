@@ -213,6 +213,9 @@ func relToRoot(root, target string) string {
 	return rel
 }
 
+// writeDummyFile writes a tar header for a zero-byte placeholder entry.
+// Directories get the [baseFolderPerms] mode and a trailing "/" on their name,
+// files get the [baseFilePerms] mode. No content or real metadata is written.
 func writeDummyFile(tw *tar.Writer, name string, isDir bool) error {
 	name = filepath.ToSlash(name)
 

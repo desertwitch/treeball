@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -664,4 +665,403 @@ func Test_Program_Diff_CtxCancel_Error(t *testing.T) {
 
 	_, err = fs.Stat("/diff.tar.gz")
 	require.ErrorIs(t, err, os.ErrNotExist)
+}
+
+// Expectation: The function should stream paths from a directory using fsPathStream.
+func Test_Program_multiPathStream_Dir_Success(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	require.NoError(t, fs.MkdirAll("/project/assets", 0o755))
+	require.NoError(t, afero.WriteFile(fs, "/project/a.txt", []byte("a"), 0o644))
+	require.NoError(t, afero.WriteFile(fs, "/project/assets/b.txt", []byte("b"), 0o644))
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	paths, errs, err := prog.multiPathStream(t.Context(), "/project", true, []string{"assets/b.txt"})
+
+	require.NoError(t, err)
+	require.NotNil(t, paths)
+	require.NotNil(t, errs)
+
+	got := make([]string, 0, len(paths))
+	for p := range paths {
+		got = append(got, p)
+	}
+
+	for err := range errs {
+		require.NoError(t, err)
+	}
+
+	require.Equal(t, []string{"a.txt", "assets/"}, got)
+}
+
+// Expectation: The function should stream paths from a tar using tarPathStream.
+func Test_Program_multiPathStream_File_Success(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	tarData := createTar([]string{"alpha.txt", "zeta/", "zeta/beta.txt"})
+	require.NoError(t, afero.WriteFile(fs, "/archive.tar.gz", tarData, 0o644))
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	paths, errs, err := prog.multiPathStream(t.Context(), "/archive.tar.gz", true, nil)
+
+	require.NoError(t, err)
+	require.NotNil(t, paths)
+	require.NotNil(t, errs)
+
+	got := make([]string, 0, len(paths))
+	for p := range paths {
+		got = append(got, p)
+	}
+
+	for err := range errs {
+		require.NoError(t, err)
+	}
+
+	require.Equal(t, []string{"alpha.txt", "zeta/", "zeta/beta.txt"}, got)
+}
+
+// Expectation: The function should return an error if the input path cannot be stat'ed.
+func Test_Program_multiPathStream_Stat_Error(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	paths, errs, err := prog.multiPathStream(t.Context(), "/missing", false, nil)
+
+	require.Error(t, err)
+	require.Nil(t, paths)
+	require.Nil(t, errs)
+
+	require.Contains(t, err.Error(), "failed to stat")
+}
+
+// Expectation: The channels should contain the correct ordered paths and no errors.
+func Test_Program_fsPathStream_Sorted_Success(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	require.NoError(t, fs.MkdirAll("/testdir/subdir", 0o755))
+	require.NoError(t, afero.WriteFile(fs, "/testdir/a.txt", []byte("a"), 0o644))
+	require.NoError(t, afero.WriteFile(fs, "/testdir/subdir/b.txt", []byte("b"), 0o644))
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	paths, errs := prog.fsPathStream(t.Context(), "/testdir", true, nil)
+
+	got := make([]string, 0, len(paths))
+	for p := range paths {
+		got = append(got, p)
+	}
+
+	for err := range errs {
+		require.NoError(t, err)
+	}
+
+	require.Equal(t, []string{"a.txt", "subdir/", "subdir/b.txt"}, got)
+}
+
+// Expectation: fsPathStream should return an error when given an invalid exclude pattern.
+func Test_Program_fsPathStream_InvalidExcludePattern_Error(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	require.NoError(t, fs.MkdirAll("/data", 0o755))
+	require.NoError(t, afero.WriteFile(fs, "/data/file.txt", []byte("x"), 0o644))
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	paths, errs := prog.fsPathStream(t.Context(), "/data", false, []string{"invalid["})
+
+	for range paths {
+		t.Fatal("should not emit any paths")
+	}
+
+	select {
+	case err := <-errs:
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "exclude")
+	default:
+		t.Fatal("expected error from fsPathStream")
+	}
+}
+
+// Expectation: Should return error if the filesystem walk fails.
+func Test_Program_fsPathStream_WalkDir_Error(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	require.NoError(t, afero.WriteFile(fs, "/somefile", []byte("data"), 0o644))
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	prog.fsWalker = errorWalker{}
+
+	paths, errs := prog.fsPathStream(t.Context(), "/somefile", false, nil)
+
+	for range paths {
+		t.Fatal("should not emit paths")
+	}
+
+	select {
+	case err := <-errs:
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "failed to stream from fs")
+	default:
+		t.Fatal("expected error from fsPathStream")
+	}
+}
+
+// Expectation: Should cancel walking when context is canceled.
+func Test_Program_fsPathStream_CtxCancel_Error(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	require.NoError(t, fs.MkdirAll("/cancel", 0o755))
+	require.NoError(t, afero.WriteFile(fs, "/cancel/a.txt", []byte("a"), 0o644))
+
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	paths, errs := prog.fsPathStream(ctx, "/cancel", false, nil)
+
+	for range paths {
+		t.Fatal("should not emit paths")
+	}
+
+	for err := range errs {
+		require.ErrorIs(t, err, context.Canceled)
+	}
+}
+
+// Expectation: The channels should contain the correct ordered paths and no errors.
+func Test_Program_tarPathStream_Sorted_Success(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	tarData := createTar([]string{"z.txt", "b/", "b/c.txt"})
+	require.NoError(t, afero.WriteFile(fs, "/archive.tar.gz", tarData, 0o644))
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	paths, errs := prog.tarPathStream(t.Context(), "/archive.tar.gz", true, nil)
+
+	got := make([]string, 0, len(paths))
+	for p := range paths {
+		got = append(got, p)
+	}
+
+	for err := range errs {
+		require.NoError(t, err)
+	}
+
+	require.Equal(t, []string{"b/", "b/c.txt", "z.txt"}, got)
+}
+
+// Expectation: The channels should contain the correct ordered paths and no errors.
+func Test_Program_tarPathStream_Unsorted_Success(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	tarData := createTar([]string{"z.txt", "b/", "b/c.txt"})
+	require.NoError(t, afero.WriteFile(fs, "/archive.tar.gz", tarData, 0o644))
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	paths, errs := prog.tarPathStream(t.Context(), "/archive.tar.gz", false, nil)
+
+	got := make([]string, 0, len(paths))
+	for p := range paths {
+		got = append(got, p)
+	}
+
+	for err := range errs {
+		require.NoError(t, err)
+	}
+
+	require.Equal(t, []string{"z.txt", "b/", "b/c.txt"}, got)
+}
+
+// Expectation: The channels should contain the correct error and no paths.
+func Test_Program_tarPathStream_Open_Error(t *testing.T) {
+	baseFs := afero.NewMemMapFs()
+
+	require.NoError(t, afero.WriteFile(baseFs, "/archive.tar.gz", []byte("test"), 0o644))
+
+	fs := errorFs{Fs: baseFs}
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	paths, errs := prog.tarPathStream(t.Context(), "/archive.tar.gz", false, nil)
+
+	for range paths {
+		t.Fatal("should not emit paths")
+	}
+
+	select {
+	case err := <-errs:
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "simulated open failure")
+	default:
+		t.Fatal("expected error from tarPathStream")
+	}
+}
+
+// Expectation: The channels should contain the correct error and no paths.
+func Test_Program_tarPathStream_GzipDecode_Error(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	require.NoError(t, afero.WriteFile(fs, "/archive.tar.gz", []byte("not a gzip file"), 0o644))
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	paths, errs := prog.tarPathStream(t.Context(), "/archive.tar.gz", false, nil)
+
+	for range paths {
+		t.Fatal("should not emit any paths")
+	}
+
+	select {
+	case err := <-errs:
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "gzip")
+	default:
+		t.Fatal("expected gzip error from tarPathStream")
+	}
+}
+
+// Expectation: The channels should contain the correct error and no paths.
+func Test_Program_tarPathStream_TarDecode_Error(t *testing.T) {
+	var buf bytes.Buffer
+	gz := gzip.NewWriter(&buf)
+
+	_, err := gz.Write([]byte("not a valid tarball"))
+	require.NoError(t, err)
+
+	err = gz.Close()
+	require.NoError(t, err)
+
+	fs := afero.NewMemMapFs()
+	require.NoError(t, afero.WriteFile(fs, "/archive.tar.gz", buf.Bytes(), 0o644))
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	paths, errs := prog.tarPathStream(t.Context(), "/archive.tar.gz", false, nil)
+
+	for range paths {
+		t.Fatal("should not emit any paths")
+	}
+
+	select {
+	case err := <-errs:
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "tar")
+	default:
+		t.Fatal("expected tar error from tarPathStream")
+	}
+}
+
+// Expectation: tarPathStream should return an error when given an invalid exclude pattern.
+func Test_Program_tarPathStream_InvalidExcludePattern_Error(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	tarData := createTar([]string{"foo.txt"})
+	require.NoError(t, afero.WriteFile(fs, "/archive.tar.gz", tarData, 0o644))
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	paths, errs := prog.tarPathStream(t.Context(), "/archive.tar.gz", false, []string{"invalid["})
+
+	for range paths {
+		t.Fatal("should not emit any paths")
+	}
+
+	select {
+	case err := <-errs:
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "exclude")
+	default:
+		t.Fatal("expected error from tarPathStream")
+	}
+}
+
+// Expectation: Should cancel decompression when context is canceled.
+func Test_Program_tarPathStream_CtxCancel_Error(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	tarData := createTar([]string{"z.txt", "b/", "b/c.txt"})
+	require.NoError(t, afero.WriteFile(fs, "/archive.tar.gz", tarData, 0o644))
+
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	paths, errs := prog.tarPathStream(ctx, "/archive.tar.gz", false, nil)
+
+	for range paths {
+		t.Fatal("should not emit any paths")
+	}
+
+	select {
+	case err := <-errs:
+		require.ErrorIs(t, err, context.Canceled)
+	default:
+		t.Fatal("expected ctx error from tarPathStream")
+	}
+}
+
+// Expectation: The channels should contain the correct ordered paths and no errors.
+func Test_extsortStrings_Success(t *testing.T) {
+	in := make(chan string, 3)
+	in <- "c"
+	in <- "a"
+	in <- "b"
+	close(in)
+
+	extErrs := make(chan error)
+	close(extErrs)
+
+	out, errs := extsortStrings(t.Context(), in, extErrs, &extSortConfigDefault)
+
+	got := make([]string, 0, len(out))
+	for p := range out {
+		got = append(got, p)
+	}
+
+	for err := range errs {
+		require.NoError(t, err)
+	}
+
+	require.Equal(t, []string{"a", "b", "c"}, got)
+}
+
+// Expectation: The channels should contain the correct error and no paths.
+func Test_extsortStrings_ExternalChannel_Error(t *testing.T) {
+	in := make(chan string)
+	close(in)
+
+	extErrs := make(chan error, 1)
+	extErrs <- errors.New("simulated external error")
+	close(extErrs)
+
+	out, errs := extsortStrings(t.Context(), in, extErrs, &extSortConfigDefault)
+
+	for range out {
+		t.Fatal("should not receive any output")
+	}
+
+	select {
+	case err := <-errs:
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "simulated external error")
+	default:
+		t.Fatal("expected error from extsortStrings")
+	}
+}
+
+// Expectation: A context cancellation should be respected and the sorting interrupted.
+func Test_extsortStrings_CtxCancel_Error(t *testing.T) {
+	ctx, cancel := context.WithCancel(t.Context())
+
+	in := make(chan string, 1)
+	in <- "a"
+	close(in)
+
+	extErrs := make(chan error)
+	close(extErrs)
+
+	cancel()
+	out, errs := extsortStrings(ctx, in, extErrs, &extSortConfigDefault)
+
+	for range out {
+		t.Fatal("should not emit output")
+	}
+
+	for err := range errs {
+		require.ErrorIs(t, err, context.Canceled)
+	}
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -11,6 +12,88 @@ import (
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
 )
+
+// Expectation: Should return all entries from the exclude slice when no file is provided.
+func Test_Program_mergeExcludes_SliceOnly_Success(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	result, err := prog.mergeExcludes([]string{"foo", "bar"}, "")
+
+	require.NoError(t, err)
+	require.Equal(t, []string{"foo", "bar"}, result)
+}
+
+// Expectation: Should return entries from the file only when no slice is provided.
+func Test_Program_mergeExcludes_FileOnly_Success(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	content := "alpha\nbeta\n"
+	require.NoError(t, afero.WriteFile(fs, "/excludes.txt", []byte(content), 0o644))
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	result, err := prog.mergeExcludes(nil, "/excludes.txt")
+
+	require.NoError(t, err)
+	require.Equal(t, []string{"alpha", "beta"}, result)
+}
+
+// Expectation: Should return combined entries from both slice and file.
+func Test_Program_mergeExcludes_FileAndSlice_Success(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	content := "one\ntwo\n"
+	require.NoError(t, afero.WriteFile(fs, "/ex.txt", []byte(content), 0o644))
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	result, err := prog.mergeExcludes([]string{"three", "four"}, "/ex.txt")
+
+	require.NoError(t, err)
+	require.Equal(t, []string{"one", "two", "three", "four"}, result)
+}
+
+// Expectation: Should ignore blank lines and comment lines in the exclude file.
+func Test_Program_mergeExcludes_FileWithCommentsAndBlanks_Success(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	content := `
+# this is a comment
+foo
+
+# another comment
+bar
+`
+	require.NoError(t, afero.WriteFile(fs, "/ignore.txt", []byte(content), 0o644))
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	result, err := prog.mergeExcludes(nil, "/ignore.txt")
+
+	require.NoError(t, err)
+	require.Equal(t, []string{"foo", "bar"}, result)
+}
+
+// Expectation: Should return a non-nil slice when no excludes are provided.
+func Test_Program_mergeExcludes_NoExcludes_Success(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	result, err := prog.mergeExcludes(nil, "")
+
+	require.NoError(t, err)
+	require.NotNil(t, result)
+	require.Empty(t, result)
+}
+
+// Expectation: Should return an error if the exclude file does not exist.
+func Test_Program_mergeExcludes_ExcludeFileMissing_Error(t *testing.T) {
+	fs := afero.NewMemMapFs()
+
+	prog := NewProgram(fs, io.Discard, io.Discard, nil, nil)
+	_, err := prog.mergeExcludes(nil, "/missing.txt")
+
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "failed to open exclude file")
+}
 
 // Expectation: The 'create' subcommand should not error with valid arguments and existing input.
 func Test_NewRootCmd_CreateCommand_Success(t *testing.T) {

@@ -41,22 +41,27 @@ func (w OSWalker) WalkDir(root string, fn fs.WalkDirFunc) error {
 	return filepath.WalkDir(root, fn) //nolint:wrapcheck
 }
 
+// fileInfoDirEntry is an adapter to turn an [fs.FileInfo] into an [fs.DirEntry].
 type fileInfoDirEntry struct {
 	fs.FileInfo
 }
 
+// Type returns the type bits of the underlying [fs.FileInfo] mode.
 func (fi fileInfoDirEntry) Type() fs.FileMode {
 	return fi.Mode().Type()
 }
 
+// Info returns the underlying [fs.FileInfo]; it never fails.
 func (fi fileInfoDirEntry) Info() (fs.FileInfo, error) {
 	return fi.FileInfo, nil
 }
 
+// IsDir reports whether the underlying [fs.FileInfo] describes a directory.
 func (fi fileInfoDirEntry) IsDir() bool {
 	return fi.Mode().IsDir()
 }
 
+// Name returns the base name of the underlying [fs.FileInfo].
 func (fi fileInfoDirEntry) Name() string {
 	return fi.FileInfo.Name()
 }
@@ -73,6 +78,9 @@ type treeExcluder struct {
 	lastParentExcluded bool
 }
 
+// isExcluded reports whether the archive entry name is excluded, either by itself
+// or because one of its parent directories is. Without any excludes, it always
+// reports false without further work.
 func (e *treeExcluder) isExcluded(name string, isDir bool) (bool, error) {
 	if len(e.excludes) == 0 {
 		return false, nil
@@ -118,6 +126,10 @@ func (e *treeExcluder) anyAncestorExcluded(dir string) (bool, error) {
 	return false, nil
 }
 
+// isExcluded reports whether path matches any of the exclude patterns, which
+// follow the doublestar format and are matched against the whole cleaned path.
+// A leading "/" in a pattern is ignored; a trailing "/" restricts it to
+// directories. An error is returned for an invalid pattern.
 func isExcluded(path string, isDir bool, excludes []string) (bool, error) {
 	path = filepath.ToSlash(filepath.Clean(path))
 
